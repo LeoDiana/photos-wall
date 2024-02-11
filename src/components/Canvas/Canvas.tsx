@@ -1,6 +1,4 @@
 import React, { useRef, useEffect, useState, MouseEvent } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from 'localFirebaseInstance';
 
 interface ImageData {
   id: string;
@@ -14,16 +12,12 @@ interface ImageData {
 
 interface CanvasProps {
   images: ImageData[];
-}
-
-async function updatePhotoPosition(id: string, x: number, y: number) {
-  const docRef = doc(db, 'photos', id);
-  await updateDoc(docRef, { x, y, order: Date.now() });
+  updatePhotoPosition: (id: string, x: number, y: number) => void;
 }
 
 type PreloadedImages = { [key: string]: HTMLImageElement };
 
-const Canvas: React.FC<CanvasProps> = ({ images }) => {
+const Canvas: React.FC<CanvasProps> = ({ images, updatePhotoPosition }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imagePositions, setImagePositions] = useState<ImageData[]>(images.sort((a, b) => a.order - b.order));
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
@@ -147,7 +141,7 @@ const Canvas: React.FC<CanvasProps> = ({ images }) => {
     };
 
     const handleMouseUp = () => {
-      if(selectedImageIndex) {
+      if(selectedImageIndex !== null) {
         const { id, x, y } = imagePositions[selectedImageIndex];
         updatePhotoPosition(id, x, y);
       }
