@@ -124,8 +124,6 @@ const Canvas: React.FC<CanvasProps> = ({ images }) => {
         const mouseX = e.clientX - canvas.getBoundingClientRect().left - canvasOffset.x;
         const mouseY = e.clientY - canvas.getBoundingClientRect().top - canvasOffset.y;
 
-        console.log(mouseX, canvasOffset);
-
         const newX = mouseX - dragStartCoords.x;
         const newY = mouseY - dragStartCoords.y;
 
