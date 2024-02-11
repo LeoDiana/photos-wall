@@ -1,13 +1,15 @@
 import React, { useRef, useEffect, useState, MouseEvent } from 'react';
-import { addDoc, collection, doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { db } from 'localFirebaseInstance';
 
 interface ImageData {
+  id: string;
   src: string;
   x: number;
   y: number;
   width: number;
   height: number;
+  order: number;
 }
 
 interface CanvasProps {
@@ -16,17 +18,18 @@ interface CanvasProps {
 
 async function updatePhotoPosition(id: string, x:number, y:number) {
   const docRef = doc(db, 'photos', id)
-  await updateDoc(docRef, {x, y})
+  await updateDoc(docRef, {x, y, order: Date.now()})
 }
+
+type PreloadedImages = { [key: string]: HTMLImageElement };
 
 const Canvas: React.FC<CanvasProps> = ({ images }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [imagePositions, setImagePositions] = useState<ImageData[]>(images);
+  const [imagePositions, setImagePositions] = useState<ImageData[]>(images.sort((a, b) => a.order - b.order));
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [dragStartCoords, setDragStartCoords] = useState<{ x: number; y: number } | null>(null);
   const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
-  const [preloadedImages, setPreloadedImages] = useState<HTMLImageElement[]>([]);
-  console.log(dragStartCoords, selectedImageIndex);
+  const [preloadedImages, setPreloadedImages] = useState<PreloadedImages>({});
 
 
   useEffect(() => {
@@ -37,7 +40,7 @@ const Canvas: React.FC<CanvasProps> = ({ images }) => {
     if (!context) return;
 
     let imagesToLoad = images.length;
-    const loadedImages: HTMLImageElement[] = [];
+    const loadedImages: PreloadedImages = {};
 
     const onImageLoad = () => {
       imagesToLoad--;
@@ -56,8 +59,7 @@ const Canvas: React.FC<CanvasProps> = ({ images }) => {
       const image = new Image();
       image.src = imageData.src;
       image.onload = () => {
-        // TODO order images
-        loadedImages.push(image);
+        loadedImages[imageData.id] = image;
         onImageLoad();
       };
       image.onerror = (error) => {
@@ -69,8 +71,8 @@ const Canvas: React.FC<CanvasProps> = ({ images }) => {
       if (!imagesLoaded) return;
 
       context.clearRect(0, 0, canvas.width, canvas.height);
-      imagePositions.forEach((imageData, index) => {
-        const image = preloadedImages[index];
+      imagePositions.forEach((imageData) => {
+        const image = preloadedImages[imageData.id];
         context.drawImage(image, imageData.x, imageData.y, imageData.width, imageData.height);
       });
     };
@@ -88,17 +90,12 @@ const Canvas: React.FC<CanvasProps> = ({ images }) => {
           mouseY >= imageData.y &&
           mouseY <= imageData.y + imageData.height
         ) {
-          // setSelectedImageIndex(imagePositions.length-1);
-          setSelectedImageIndex(i);
+          setSelectedImageIndex(imagePositions.length-1);
 
           // Reorder the images so that the selected image is moved to the end of the array
-          // const updatedImagePositions = [...imagePositions];
-          // updatedImagePositions.push(updatedImagePositions.splice(i, 1)[0]);
-          // setImagePositions(updatedImagePositions);
-          //
-          // const updatedPreloadedImages = [...preloadedImages]
-          // updatedPreloadedImages.push(updatedPreloadedImages.splice(i, 1)[0]);
-          // setPreloadedImages(updatedPreloadedImages);
+          const updatedImagePositions = [...imagePositions];
+          updatedImagePositions.push(updatedImagePositions.splice(i, 1)[0]);
+          setImagePositions(updatedImagePositions);
 
           setDragStartCoords({ x: mouseX - imageData.x, y: mouseY - imageData.y });
           break;
