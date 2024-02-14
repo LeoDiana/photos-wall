@@ -4,12 +4,12 @@ import { Image } from 'types/image.ts'
 
 interface CanvasProps {
   images: Image[]
-  updatePhotoPosition: (id: string, x: number, y: number) => void
+  onImagePositionChange: (id: string, x: number, y: number) => void
 }
 
 type PreloadedImages = { [key: string]: HTMLImageElement }
 
-function Canvas({ images, updatePhotoPosition }: CanvasProps) {
+function Canvas({ images, onImagePositionChange }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [imagePositions, setImagePositions] = useState<Image[]>(
     images.sort((a, b) => a.order - b.order),
@@ -140,7 +140,7 @@ function Canvas({ images, updatePhotoPosition }: CanvasProps) {
     const handleMouseUp = () => {
       if (selectedImageIndex !== null) {
         const { id, x, y } = imagePositions[selectedImageIndex]
-        updatePhotoPosition(id, x, y)
+        onImagePositionChange(id, x, y)
       }
       setSelectedImageIndex(null)
       setDragStartCoords(null)

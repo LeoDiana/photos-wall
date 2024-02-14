@@ -1,33 +1,12 @@
-import { collection, getDocs, query, addDoc, doc, updateDoc } from 'firebase/firestore'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import Canvas from 'components/Canvas'
 import UploadWrapper from 'components/UploadWrapper'
-import { db } from 'firebaseInstances'
 import useUpload from 'hooks/useUpload.ts'
 import { Image } from 'types/image.ts'
 
-async function addPhoto(src: string, wallId = 'photos') {
-  const docRef = collection(db, wallId)
-  await addDoc(docRef, { src, width: 200, height: 200, x: 0, y: 0 })
-}
-
-async function getPhotos(wallId = 'photos') {
-  const photosQuery = query(collection(db, wallId))
-  const photosSnapshot = await getDocs(photosQuery)
-  const photos = photosSnapshot.docs.map((d) => ({
-    ...d.data(),
-    id: d.id,
-  }))
-
-  return (await Promise.all(photos)) as unknown as Image[]
-}
-
-async function updatePhotoPosition(id: string, x: number, y: number, wallId = 'photos') {
-  const docRef = doc(db, wallId, id)
-  await updateDoc(docRef, { x, y, order: Date.now() })
-}
+import { addPhoto, getPhotos, updatePhotoPosition } from './api'
 
 function App() {
   const { wallId } = useParams() as { wallId: string }
@@ -42,7 +21,7 @@ function App() {
     if (urls.length && urls[0] !== 'loading') {
       addPhoto(urls[0], wallId)
     }
-  }, [urls])
+  }, [urls, wallId])
 
   useEffect(() => {
     ;(async () => {
@@ -56,7 +35,7 @@ function App() {
       <Canvas
         images={photos}
         key={JSON.stringify(photos)}
-        updatePhotoPosition={(id: string, x: number, y: number) =>
+        onImagePositionChange={(id: string, x: number, y: number) =>
           updatePhotoPosition(id, x, y, wallId)
         }
       />
