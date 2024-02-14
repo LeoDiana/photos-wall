@@ -1,7 +1,8 @@
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { ChangeEvent, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
-import {storage} from 'localFirebaseInstance'
+import { v4 as uuid } from 'uuid'
+
+import { storage } from 'firebaseInstances'
 
 const MAX_SIZE = 2 * 1024 ** 2
 const MAX_FILES = 10
@@ -28,7 +29,7 @@ function useUpload() {
         continue
       }
 
-      const storageRef = ref(storage, `user-photos/${uuidv4()}`)
+      const storageRef = ref(storage, `user-photos/${uuid()}`)
 
       const snapshot = await uploadBytes(storageRef, file)
       const newUrl = await getDownloadURL(snapshot.ref)
@@ -53,4 +54,5 @@ function useUpload() {
     clear,
   }
 }
+
 export default useUpload

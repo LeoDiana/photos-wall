@@ -3,7 +3,7 @@ const PATHS = {
   walls: {
     _: 'walls/',
     _anyOne: '/walls/:wallId',
-  }
+  },
 }
 
- export default PATHS;
+export default PATHS
