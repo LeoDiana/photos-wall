@@ -27,7 +27,7 @@ function App() {
     ;(async () => {
       setPhotos(await getPhotos(wallId))
     })()
-  }, [])
+  }, [wallId])
 
   return (
     <div>

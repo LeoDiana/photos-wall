@@ -1,6 +1,6 @@
 import { MouseEvent, useEffect, useRef, useState } from 'react'
 
-import { Image } from 'types/image.ts'
+import type { Image } from 'types/image.ts'
 
 interface CanvasProps {
   images: Image[]
@@ -55,6 +55,14 @@ function Canvas({ images, onImagePositionChange }: CanvasProps) {
         onImageError(error)
       }
     })
+  }, [images])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const context = canvas.getContext('2d')
+    if (!context) return
 
     const draw = () => {
       if (!imagesLoaded) return
@@ -71,6 +79,21 @@ function Canvas({ images, onImagePositionChange }: CanvasProps) {
         )
       })
     }
+
+    const animate = () => {
+      requestAnimationFrame(animate)
+      draw()
+    }
+
+    animate()
+  }, [canvasOffset, imagePositions, imagesLoaded, preloadedImages])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const context = canvas.getContext('2d')
+    if (!context) return
 
     const handleMouseDown = (e: MouseEvent<HTMLCanvasElement>) => {
       const mouseX = e.clientX - canvas.getBoundingClientRect().left - canvasOffset.x
@@ -147,13 +170,6 @@ function Canvas({ images, onImagePositionChange }: CanvasProps) {
       setIsDragging(false)
     }
 
-    const animate = () => {
-      requestAnimationFrame(animate)
-      draw()
-    }
-
-    animate()
-
     /* eslint-disable @typescript-eslint/ban-ts-comment */
     /* @ts-expect-error */
     canvas.addEventListener('mousedown', handleMouseDown)
@@ -169,7 +185,14 @@ function Canvas({ images, onImagePositionChange }: CanvasProps) {
       canvas.removeEventListener('mouseup', handleMouseUp)
     }
     /* eslint-enable @typescript-eslint/ban-ts-comment */
-  }, [imagePositions, imagesLoaded, canvasOffset, isDragging, dragStartCoords])
+  }, [
+    canvasOffset,
+    dragStartCoords,
+    imagePositions,
+    isDragging,
+    onImagePositionChange,
+    selectedImageIndex,
+  ])
 
   return (
     <canvas
