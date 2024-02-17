@@ -6,3 +6,13 @@
     background: #1A1A1A;
     color: white;
 }
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    height: 100%;
+}

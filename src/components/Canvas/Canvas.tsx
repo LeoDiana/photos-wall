@@ -25,6 +25,14 @@ function Canvas({ images, onImagePositionChange }: CanvasProps) {
     const canvas = canvasRef.current
     if (!canvas) return
 
+    canvas.height = window.innerHeight
+    canvas.width = window.innerWidth
+
+    window.addEventListener('resize', function () {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    })
+
     const context = canvas.getContext('2d')
     if (!context) return
 
@@ -197,9 +205,12 @@ function Canvas({ images, onImagePositionChange }: CanvasProps) {
   return (
     <canvas
       ref={canvasRef}
-      width={800}
-      height={800}
-      style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      style={{
+        cursor: isDragging ? 'grabbing' : 'grab',
+        width: '100%',
+        height: '100vh',
+        display: 'block',
+      }}
     />
   )
 }
