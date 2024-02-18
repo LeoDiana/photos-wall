@@ -6,7 +6,7 @@ import UploadWrapper from 'components/UploadWrapper'
 import useUpload from 'hooks/useUpload.ts'
 import { Image } from 'types/image.ts'
 
-import { addPhoto, getPhotos, updatePhotoPosition } from './api'
+import { addImage, getImages, updateImagePosition } from './api'
 
 function App() {
   const { wallId } = useParams() as {
@@ -24,7 +24,7 @@ function App() {
   useEffect(() => {
     ;(async () => {
       if (urls.length && urls[0] !== 'loading') {
-        const photo = await addPhoto(urls[0], wallId)
+        const photo = await addImage(urls[0], wallId)
         setImages((images) => [...images, photo])
       }
     })()
@@ -32,12 +32,12 @@ function App() {
 
   useEffect(() => {
     ;(async () => {
-      setImages(await getPhotos(wallId))
+      setImages(await getImages(wallId))
     })()
   }, [wallId])
 
   function handleImagePositionChange(id: string, x: number | null, y: number | null) {
-    updatePhotoPosition(id, x, y, wallId)
+    updateImagePosition(id, x, y, wallId)
     setImages((images) => images.map((img) => (img.id === id ? { ...img, x, y } : img)))
   }
 

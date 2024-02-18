@@ -1,5 +1,5 @@
-import addPhoto from './addPhoto.ts'
-import getPhotos from './getPhotos.ts'
-import updatePhotoPosition from './updatePhotoPosition.ts'
+import addImage from './addImage.ts'
+import getImages from './getImages.ts'
+import updateImagePosition from './updateImagePosition.ts'
 
-export { addPhoto, getPhotos, updatePhotoPosition }
+export { addImage, getImages, updateImagePosition }

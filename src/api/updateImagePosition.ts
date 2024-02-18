@@ -2,7 +2,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 
 import { db } from '../firebaseInstances.ts'
 
-async function updatePhotoPosition(
+async function updateImagePosition(
   id: string,
   x: number | null,
   y: number | null,
@@ -12,4 +12,4 @@ async function updatePhotoPosition(
   await updateDoc(docRef, { x, y, order: Date.now() })
 }
 
-export default updatePhotoPosition
+export default updateImagePosition
