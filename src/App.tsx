@@ -22,9 +22,12 @@ function App() {
   }
 
   useEffect(() => {
-    if (urls.length && urls[0] !== 'loading') {
-      addPhoto(urls[0], wallId)
-    }
+    ;(async () => {
+      if (urls.length && urls[0] !== 'loading') {
+        const photo = await addPhoto(urls[0], wallId)
+        setImages((images) => [...images, photo])
+      }
+    })()
   }, [urls, wallId])
 
   useEffect(() => {
@@ -33,15 +36,17 @@ function App() {
     })()
   }, [wallId])
 
+  function handleImagePositionChange(id: string, x: number | null, y: number | null) {
+    updatePhotoPosition(id, x, y, wallId)
+    setImages((images) => images.map((img) => (img.id === id ? { ...img, x, y } : img)))
+  }
+
   return (
     <div>
       <h1 className='text-3xl text-center mt-2'>My wall</h1>
       <Canvas
         images={images}
-        // key={JSON.stringify(imagesOnWall)}
-        onImagePositionChange={(id: string, x: number | null, y: number | null) => {
-          updatePhotoPosition(id, x, y, wallId)
-        }}
+        onImagePositionChange={handleImagePositionChange}
         selectedImageId={selectedImageId}
         setSelectedImageId={setSelectedImageId}
       />
@@ -50,6 +55,9 @@ function App() {
           Upload
         </div>
       </UploadWrapper>
+      {urls.some((url) => url === 'loading') && (
+        <div className='font-medium fixed bottom-1 -translate-x-1/2 left-1/2'>LOADING...</div>
+      )}
     </div>
   )
 }

@@ -153,24 +153,28 @@ function Canvas({
       imagePositions.forEach((imageData) => {
         if (imageData.x !== null && imageData.y !== null) {
           const image = preloadedImages[imageData.id]
-          context.drawImage(
-            image,
-            imageData.x + canvasOffset.x,
-            imageData.y + canvasOffset.y,
-            imageData.width,
-            imageData.height,
-          )
+          if (image) {
+            context.drawImage(
+              image,
+              imageData.x + canvasOffset.x,
+              imageData.y + canvasOffset.y,
+              imageData.width,
+              imageData.height,
+            )
+          }
         }
       })
       imagesInDropzone.forEach((imageData, index) => {
         const image = preloadedImages[imageData.id]
-        context.drawImage(
-          image,
-          DROPZONE_IMAGE_WIDTH * index,
-          canvas.height - DROPZONE_BOTTOM_OFFSET,
-          DROPZONE_IMAGE_WIDTH,
-          DROPZONE_IMAGE_HEIGHT,
-        )
+        if (image) {
+          context.drawImage(
+            image,
+            DROPZONE_IMAGE_WIDTH * index,
+            canvas.height - DROPZONE_BOTTOM_OFFSET,
+            DROPZONE_IMAGE_WIDTH,
+            DROPZONE_IMAGE_HEIGHT,
+          )
+        }
       })
     }
 
