@@ -1,7 +1,7 @@
 import { collection, getDocs, query } from 'firebase/firestore'
 
 import { db } from '../firebaseInstances.ts'
-import { Image } from '../types/image.ts'
+import { ImageData } from '../types/imageData.ts'
 
 async function getImages(wallId = 'photos') {
   const photosQuery = query(collection(db, wallId))
@@ -11,7 +11,7 @@ async function getImages(wallId = 'photos') {
     id: d.id,
   }))
 
-  return (await Promise.all(photos)) as unknown as Image[]
+  return (await Promise.all(photos)) as unknown as ImageData[]
 }
 
 export default getImages

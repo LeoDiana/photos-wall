@@ -1,9 +1,9 @@
 import { MouseEvent, useEffect, useRef, useState } from 'react'
 
-import type { Image } from 'types/image.ts'
+import type { ImageData } from 'types/imageData.ts'
 
 interface CanvasProps {
-  images: Image[]
+  images: ImageData[]
   onImagePositionChange: (id: string, x: number | null, y: number | null) => void
   selectedImageId: string | null
   setSelectedImageId: (id: string | null) => void
@@ -17,7 +17,7 @@ const DROPZONE_IMAGE_HEIGHT = 100
 const DROPZONE_IMAGE_WIDTH = 100
 const DROPZONE_BOTTOM_OFFSET = 150
 
-function isImageWithCoords(imageData: Image) {
+function isImageWithCoords(imageData: ImageData) {
   return imageData.x !== null && imageData.y !== null
 }
 
@@ -28,7 +28,7 @@ function isInDropzone(mouseY: number, canvasHeight: number) {
   )
 }
 
-function isMouseInImageRect(mouseX: number, mouseY: number, imageData: Image) {
+function isMouseInImageRect(mouseX: number, mouseY: number, imageData: ImageData) {
   return (
     imageData.x !== null &&
     imageData.y !== null &&
@@ -53,7 +53,7 @@ function isMouseInDropzoneImageRect(
   )
 }
 
-function compareByOrder(a: Image, b: Image) {
+function compareByOrder(a: ImageData, b: ImageData) {
   return a.order - b.order
 }
 
@@ -64,7 +64,7 @@ function Canvas({
   setSelectedImageId,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [imagePositions, setImagePositions] = useState<Image[]>([])
+  const [imagePositions, setImagePositions] = useState<ImageData[]>([])
   const [dragStartCoords, setDragStartCoords] = useState<{
     x: number
     y: number

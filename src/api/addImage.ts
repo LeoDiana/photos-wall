@@ -2,7 +2,7 @@ import { addDoc, collection, getDoc } from 'firebase/firestore'
 
 import { db } from 'firebaseInstances.ts'
 
-import { Image } from '../types/image.ts'
+import { ImageData } from '../types/imageData.ts'
 
 async function addImage(src: string, wallId = 'photos') {
   const docRef = collection(db, wallId)
@@ -15,7 +15,7 @@ async function addImage(src: string, wallId = 'photos') {
     height: 200,
   })
   const newImageSnapshot = await getDoc(newImageRef)
-  return { ...newImageSnapshot.data(), id: newImageSnapshot.id } as Image
+  return { ...newImageSnapshot.data(), id: newImageSnapshot.id } as ImageData
 }
 
 export default addImage

@@ -1,4 +1,4 @@
-export interface Image {
+export interface ImageData {
   id: string
   src: string
   x: number | null
