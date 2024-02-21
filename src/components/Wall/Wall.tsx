@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useRef } from 'react'
+import { MouseEvent, useEffect, useRef, useState } from 'react'
 
 import { ImageData } from 'types/imageData.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
@@ -17,6 +17,7 @@ interface WallProps {
   bringToFront: (id: string) => void
   onMouseUp: (e: MouseEvent<HTMLDivElement>) => void
   handleRemoveFromWall: (id: string) => void
+  handleDeleteImage: (id: string) => void
 }
 
 function Wall({
@@ -25,12 +26,15 @@ function Wall({
   bringToFront,
   onMouseUp,
   handleRemoveFromWall,
+  handleDeleteImage,
 }: WallProps) {
   const imageRefs = useRef<HTMLDivElement[]>([])
   const positions = useRef<Position[]>([])
   const offset = useRef({ x: 0, y: 0 })
   const isDragging = useRef(false)
   const selectedImageIndex = useRef<number | null>(null)
+  // const lastSelectedImageIndex = useRef<number | null>(null)
+  const [lastSelectedImageIndex, setLastSelectedImageIndex] = useState<number | null>(null)
 
   useEffect(() => {
     positions.current = images.map((image) => ({ x: image.x, y: image.y }))
@@ -48,6 +52,7 @@ function Wall({
   }
 
   function handleMouseDown(event: MouseEvent<HTMLDivElement>) {
+    setLastSelectedImageIndex(null)
     isDragging.current = true
     if (selectedImageIndex.current !== null) {
       offset.current = {
@@ -83,6 +88,7 @@ function Wall({
       onImagePositionChange(selectedImageId, x, y)
     }
     isDragging.current = false
+    setLastSelectedImageIndex(selectedImageIndex.current)
     selectedImageIndex.current = null
   }
 
@@ -106,6 +112,8 @@ function Wall({
               order={imageOrders[index]}
               onSelect={() => handleSelectImage(index)}
               onRemoveFromWall={() => handleRemoveFromWall(img.id)}
+              onDeleteImage={() => handleDeleteImage(img.id)}
+              isSelected={lastSelectedImageIndex === index}
             />
           ),
       )}

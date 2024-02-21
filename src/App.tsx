@@ -7,6 +7,7 @@ import useUpload from 'hooks/useUpload.ts'
 import { ImageData } from 'types/imageData.ts'
 
 import { addImage, getImages, updateImagePosition } from './api'
+import deleteImage from './api/deleteImage.ts'
 
 function isImageWithoutCoords(imageData: ImageData) {
   return imageData.x === null && imageData.y === null
@@ -73,6 +74,11 @@ function App() {
     handleImagePositionChange(id, null, null)
   }
 
+  function handleDeleteImage(id: string) {
+    deleteImage(id, wallId)
+    setImages((images) => images.filter((img) => img.id !== id))
+  }
+
   return (
     <div>
       <h1 className='text-3xl text-center mt-2'>My wall</h1>
@@ -83,6 +89,7 @@ function App() {
           bringToFront={bringToFront}
           onMouseUp={handleMoveImageToWall}
           handleRemoveFromWall={handleRemoveFromWall}
+          handleDeleteImage={handleDeleteImage}
         />
       </div>
       <div className='w-screen h-40 bg-rose-400 flex'>

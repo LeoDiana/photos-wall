@@ -3,12 +3,14 @@ import { ForwardedRef, forwardRef } from 'react'
 interface ImageProps {
   src: string
   order: number
+  isSelected: boolean
   onSelect: () => void
   onRemoveFromWall: () => void
+  onDeleteImage: () => void
 }
 
 function Image(
-  { src, onSelect, onRemoveFromWall, order = 0 }: ImageProps,
+  { src, onSelect, onRemoveFromWall, onDeleteImage, isSelected = false, order = 0 }: ImageProps,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
   return (
@@ -20,10 +22,12 @@ function Image(
       >
         <img src={src} draggable={false} />
       </div>
-      <div className='text-pink-600 text-2xl z-[9999]'>
-        <div>x</div>
-        <div onClick={onRemoveFromWall}>!</div>
-      </div>
+      {isSelected && (
+        <div className='text-pink-600 text-2xl z-[9999]'>
+          <div onClick={onDeleteImage}>x</div>
+          <div onClick={onRemoveFromWall}>!</div>
+        </div>
+      )}
     </div>
   )
 }
