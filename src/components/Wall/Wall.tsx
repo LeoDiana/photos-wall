@@ -33,7 +33,6 @@ function Wall({
   const offset = useRef({ x: 0, y: 0 })
   const isDragging = useRef(false)
   const selectedImageIndex = useRef<number | null>(null)
-  // const lastSelectedImageIndex = useRef<number | null>(null)
   const [lastSelectedImageIndex, setLastSelectedImageIndex] = useState<number | null>(null)
 
   useEffect(() => {
@@ -92,6 +91,22 @@ function Wall({
     selectedImageIndex.current = null
   }
 
+  function handleMouseLeave(event: MouseEvent<HTMLDivElement>) {
+    if (selectedImageIndex.current !== null) {
+      const selectedImageId = images[selectedImageIndex.current].id
+      const mouseX = event.clientX - offset.current.x
+      const mouseY = event.clientY - offset.current.y
+
+      const { x, y } = positions.current[selectedImageIndex.current] || {
+        x: mouseX,
+        y: mouseY,
+      }
+      onImagePositionChange(selectedImageId, x, y)
+    }
+    isDragging.current = false
+    selectedImageIndex.current = null
+  }
+
   const imageOrders = getSimplifiedImageOrders(images)
 
   return (
@@ -101,7 +116,7 @@ function Wall({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseOver={onMouseUp}
-      onMouseLeave={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
     >
       {images.map(
         (img, index) =>

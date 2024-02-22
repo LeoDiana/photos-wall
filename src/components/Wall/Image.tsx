@@ -24,8 +24,8 @@ function Image(
       </div>
       {isSelected && (
         <div className='text-pink-600 text-2xl z-[9999]'>
-          <div onClick={onDeleteImage}>x</div>
-          <div onClick={onRemoveFromWall}>!</div>
+          <div onMouseDown={onDeleteImage}>x</div>
+          <div onMouseDown={onRemoveFromWall}>!</div>
         </div>
       )}
     </div>
