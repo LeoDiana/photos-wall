@@ -101,6 +101,7 @@ function Wall({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseOver={onMouseUp}
+      onMouseLeave={handleMouseUp}
     >
       {images.map(
         (img, index) =>
