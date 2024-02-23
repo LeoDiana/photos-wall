@@ -6,7 +6,7 @@ import Wall from 'components/Wall/Wall.tsx'
 import useUpload from 'hooks/useUpload.ts'
 import { ImageData } from 'types/imageData.ts'
 
-import { addImage, getImages, updateImagePosition } from './api'
+import { addImage, getImages, updateImageData } from './api'
 import deleteImage from './api/deleteImage.ts'
 
 function isImageWithoutCoords(imageData: ImageData) {
@@ -42,7 +42,7 @@ function App() {
   }, [wallId])
 
   function handleImagePositionChange(id: string, x: number | null, y: number | null) {
-    updateImagePosition(id, x, y, wallId)
+    updateImageData(id, wallId, { x, y })
     setImages((images) =>
       images.map((img) => (img.id === id ? { ...img, x, y, order: Date.now() } : img)),
     )

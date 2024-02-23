@@ -1,15 +1,10 @@
 import { MouseEvent, useEffect, useRef, useState } from 'react'
 
-import { ImageData } from 'types/imageData.ts'
+import { ImageData, Position } from 'types/imageData.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 
 import Image from './Image.tsx'
-
-interface Position {
-  x: number | null
-  y: number | null
-}
 
 interface WallProps {
   images: ImageData[]
@@ -124,7 +119,7 @@ function Wall({
             <Image
               key={index}
               ref={(element) => (imageRefs.current[index] = element as HTMLDivElement)}
-              src={img.src}
+              {...img}
               order={imageOrders[index]}
               onSelect={() => handleSelectImage(index)}
               onRemoveFromWall={() => handleRemoveFromWall(img.id)}

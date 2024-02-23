@@ -1,5 +1,5 @@
 import addImage from './addImage.ts'
 import getImages from './getImages.ts'
-import updateImagePosition from './updateImagePosition.ts'
+import updateImageData from './updateImageData.ts'
 
-export { addImage, getImages, updateImagePosition }
+export { addImage, getImages, updateImageData }

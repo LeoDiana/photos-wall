@@ -33,9 +33,9 @@ function isMouseInImageRect(mouseX: number, mouseY: number, imageData: ImageData
     imageData.x !== null &&
     imageData.y !== null &&
     mouseX >= imageData.x &&
-    mouseX <= imageData.x + imageData.width &&
+    mouseX <= imageData.x + imageData.originalWidth &&
     mouseY >= imageData.y &&
-    mouseY <= imageData.y + imageData.height
+    mouseY <= imageData.y + imageData.originalHeight
   )
 }
 
@@ -158,8 +158,8 @@ function Canvas({
               image,
               imageData.x + canvasOffset.x,
               imageData.y + canvasOffset.y,
-              imageData.width,
-              imageData.height,
+              imageData.originalWidth,
+              imageData.originalHeight,
             )
           }
         }
