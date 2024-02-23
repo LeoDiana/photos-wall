@@ -7,6 +7,8 @@ import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 
 interface ImageProps extends ImageData {
   order: number
+  imageHeight?: number
+  imageWidth?: number
   isSelected: boolean
   onSelect: () => void
   onRemoveFromWall: () => void
@@ -24,12 +26,15 @@ function Image(
     xOffset,
     yOffset,
     scale,
+    rotation,
     id,
     onSelect,
     onRemoveFromWall,
     onDeleteImage,
     isSelected = false,
     order = 0,
+    imageHeight = IMAGE_HEIGHT,
+    imageWidth = IMAGE_WIDTH,
   }: ImageProps,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -42,6 +47,7 @@ function Image(
   const imageRef = useRef<HTMLImageElement>(null)
   const [isResizing, setIsResizing] = useState(false)
   const currentScale = useRef(scale)
+  const [currentRotation, setCurrentRotation] = useState(rotation)
   const imageOffset = useRef({ x: 0, y: 0 })
 
   const { wallId } = useParams() as {
@@ -84,9 +90,9 @@ function Image(
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
     if (isDragging.current) {
       imageOffset.current = {
-        x: clamp(-imageRef.current!.clientWidth + IMAGE_WIDTH, 0, event.clientX - offset.current.x),
+        x: clamp(-imageRef.current!.clientWidth + imageWidth, 0, event.clientX - offset.current.x),
         y: clamp(
-          -imageRef.current!.clientHeight + IMAGE_HEIGHT,
+          -imageRef.current!.clientHeight + imageHeight,
           0,
           event.clientY - offset.current.y,
         ),
@@ -117,7 +123,7 @@ function Image(
   function handleMouseMoveResize(event: MouseEvent<HTMLDivElement>) {
     const difX = event.clientX - offset.current.x
     currentScale.current = clamp(
-      calculateScaleFactor(originalWidth, originalHeight, IMAGE_WIDTH, IMAGE_HEIGHT),
+      calculateScaleFactor(originalWidth, originalHeight, imageWidth, imageHeight),
       1,
       (originalWidth * scale + difX) / originalWidth,
     )
@@ -133,16 +139,29 @@ function Image(
     event.stopPropagation()
   }
 
+  function handleRotateClockwise() {
+    setCurrentRotation((rotation) => (rotation + 1 > 4 ? 0 : rotation + 1))
+  }
+
+  function handleRotateCounterClockwise() {
+    setCurrentRotation((rotation) => (rotation - 1 < 0 ? 3 : rotation - 1))
+  }
+
+  useEffect(() => {
+    updateImageData(id, wallId, { rotation: currentRotation })
+  }, [currentRotation])
+
   return (
     <div className={`absolute select-none flex`} ref={ref}>
       <div
-        className={`w-[${IMAGE_WIDTH}px] h-[${IMAGE_HEIGHT}px] box-content cursor-move border-8 border-amber-50 overflow-hidden shadow-md ${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
+        className={`w-[${imageWidth}px] h-[${imageHeight}px] box-content cursor-move border-8 border-amber-50 overflow-hidden shadow-md ${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
         style={{ zIndex: order }}
         onMouseDownCapture={onSelect}
         onDoubleClick={() => setIsEditingMode((isEditingMode) => !isEditingMode)}
       >
         <div
           className={`relative ${isEditingMode ? 'opacity-80' : 'opacity-100'}`}
+          style={{ transform: `rotate(${currentRotation * 90}deg)` }}
           ref={imageContainerRef}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -163,6 +182,8 @@ function Image(
         <div className='text-pink-600 text-2xl z-[9999]'>
           <div onMouseDown={onDeleteImage}>x</div>
           <div onMouseDown={onRemoveFromWall}>!</div>
+          <div onMouseDown={handleRotateClockwise}>{'->'}</div>
+          <div onMouseDown={handleRotateCounterClockwise}>{'<-'}</div>
         </div>
       )}
       {isEditingMode && (

@@ -33,6 +33,7 @@ async function addImage(src: string, wallId = 'photos') {
     y: null,
     originalHeight: dimensions.height,
     originalWidth: dimensions.width,
+    rotation: 0,
     scale: calculateScaleFactor(dimensions.width, dimensions.height, 250, 250),
   })
   const newImageSnapshot = await getDoc(newImageRef)

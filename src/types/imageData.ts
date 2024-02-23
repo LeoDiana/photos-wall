@@ -9,6 +9,7 @@ export interface ImageData {
   scale: number
   xOffset: number | null
   yOffset: number | null
+  rotation: number
 }
 
 export interface Position {
