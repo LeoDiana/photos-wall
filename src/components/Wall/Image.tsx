@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import { updateImageData } from 'api'
 import { ImageData, Position } from 'types/imageData.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
+import clamp from 'utils/clamp.ts'
 
 interface ImageProps extends ImageData {
   order: number
@@ -81,10 +82,6 @@ function Image(
       }
       event.stopPropagation()
     }
-  }
-
-  function clamp(min: number, max: number, value: number) {
-    return value <= min ? min : value >= max ? max : value
   }
 
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {

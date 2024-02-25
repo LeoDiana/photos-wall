@@ -1,10 +1,17 @@
 import { MouseEvent, useEffect, useRef, useState } from 'react'
 
 import { ImageData, Position } from 'types/imageData.ts'
+import clamp from 'utils/clamp.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 
 import Image from './Image.tsx'
+
+const WALL_HEIGHT = 1000
+const WALL_WIDTH = 3000
+const ZOOM_FACTOR = 0.1
+const MAX_ZOOM = 2
+const MIN_ZOOM = 0.5
 
 interface WallProps {
   images: ImageData[]
@@ -29,6 +36,8 @@ function Wall({
   const isDragging = useRef(false)
   const selectedImageIndex = useRef<number | null>(null)
   const [lastSelectedImageIndex, setLastSelectedImageIndex] = useState<number | null>(null)
+  const [scale, setScale] = useState(1)
+  const wallRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     positions.current = images.map((image) => ({ x: image.x, y: image.y }))
@@ -40,6 +49,16 @@ function Wall({
     })
   }, [images])
 
+  useEffect(() => {
+    positions.current = positions.current.map((pos) => ({ x: pos.x, y: pos.y }))
+    imageRefs.current.forEach((imageRef, index) => {
+      if (imageRef?.style) {
+        imageRef.style.left = positions.current[index].x + 'px'
+        imageRef.style.top = positions.current[index].y + 'px'
+      }
+    })
+  }, [scale])
+
   function handleSelectImage(index: number) {
     selectedImageIndex.current = index
     bringToFront(images[index].id)
@@ -50,8 +69,8 @@ function Wall({
     isDragging.current = true
     if (selectedImageIndex.current !== null) {
       offset.current = {
-        x: event.clientX - (positions.current[selectedImageIndex.current].x || 0),
-        y: event.clientY - (positions.current[selectedImageIndex.current].y || 0),
+        x: event.clientX / scale - (positions.current[selectedImageIndex.current].x || 0),
+        y: event.clientY / scale - (positions.current[selectedImageIndex.current].y || 0),
       }
     }
   }
@@ -59,12 +78,12 @@ function Wall({
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
     if (isDragging.current && selectedImageIndex.current !== null) {
       imageRefs.current[selectedImageIndex.current].style.left =
-        event.clientX - offset.current.x + 'px'
+        event.clientX / scale - offset.current.x + 'px'
       imageRefs.current[selectedImageIndex.current].style.top =
-        event.clientY - offset.current.y + 'px'
+        event.clientY / scale - offset.current.y + 'px'
       positions.current[selectedImageIndex.current] = {
-        x: event.clientX - offset.current.x,
-        y: event.clientY - offset.current.y,
+        x: event.clientX / scale - offset.current.x,
+        y: event.clientY / scale - offset.current.y,
       }
     }
   }
@@ -72,8 +91,8 @@ function Wall({
   function handleMouseUp(event: MouseEvent<HTMLDivElement>) {
     if (selectedImageIndex.current !== null) {
       const selectedImageId = images[selectedImageIndex.current].id
-      const mouseX = event.clientX - offset.current.x
-      const mouseY = event.clientY - offset.current.y
+      const mouseX = event.clientX / scale - offset.current.x
+      const mouseY = event.clientY / scale - offset.current.y
 
       const { x, y } = positions.current[selectedImageIndex.current] || {
         x: mouseX,
@@ -89,8 +108,8 @@ function Wall({
   function handleMouseLeave(event: MouseEvent<HTMLDivElement>) {
     if (selectedImageIndex.current !== null) {
       const selectedImageId = images[selectedImageIndex.current].id
-      const mouseX = event.clientX - offset.current.x
-      const mouseY = event.clientY - offset.current.y
+      const mouseX = event.clientX / scale - offset.current.x
+      const mouseY = event.clientY / scale - offset.current.y
 
       const { x, y } = positions.current[selectedImageIndex.current] || {
         x: mouseX,
@@ -104,31 +123,53 @@ function Wall({
 
   const imageOrders = getSimplifiedImageOrders(images)
 
+  useEffect(() => {
+    if (wallRef.current) {
+      wallRef.current.style.transform = `scale(${scale})`
+    }
+  }, [scale])
+
+  function zoomIn() {
+    setScale((scale) => clamp(MIN_ZOOM, MAX_ZOOM, scale + ZOOM_FACTOR))
+  }
+
+  function zoomOut() {
+    setScale((scale) => clamp(MIN_ZOOM, MAX_ZOOM, scale - ZOOM_FACTOR))
+  }
+
   return (
-    <div
-      className='bg-teal-100 w-full h-full relative overflow-hidden'
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseOver={onMouseUp}
-      onMouseLeave={handleMouseLeave}
-    >
-      {images.map(
-        (img, index) =>
-          isImageWithCoords(img) && (
-            <Image
-              key={index}
-              ref={(element) => (imageRefs.current[index] = element as HTMLDivElement)}
-              {...img}
-              order={imageOrders[index]}
-              onSelect={() => handleSelectImage(index)}
-              onRemoveFromWall={() => handleRemoveFromWall(img.id)}
-              onDeleteImage={() => handleDeleteImage(img.id)}
-              isSelected={lastSelectedImageIndex === index}
-            />
-          ),
-      )}
-    </div>
+    <>
+      <div className='fixed right-2 top-1/2 text-3xl text-pink-600 z-[99999]'>
+        <div onClick={zoomIn}>+</div>
+        <div onClick={zoomOut}>-</div>
+      </div>
+      <div
+        className={`bg-teal-100 absolute overflow-hidden origin-top-left`}
+        style={{ width: WALL_WIDTH + 'px', height: WALL_HEIGHT + 'px' }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseOver={onMouseUp}
+        onMouseLeave={handleMouseLeave}
+        ref={wallRef}
+      >
+        {images.map(
+          (img, index) =>
+            isImageWithCoords(img) && (
+              <Image
+                key={index}
+                ref={(element) => (imageRefs.current[index] = element as HTMLDivElement)}
+                {...img}
+                order={imageOrders[index]}
+                onSelect={() => handleSelectImage(index)}
+                onRemoveFromWall={() => handleRemoveFromWall(img.id)}
+                onDeleteImage={() => handleDeleteImage(img.id)}
+                isSelected={lastSelectedImageIndex === index}
+              />
+            ),
+        )}
+      </div>
+    </>
   )
 }
 

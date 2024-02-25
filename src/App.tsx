@@ -22,6 +22,19 @@ function App() {
 
   const movingImageIndex = useRef<number | null>(null)
 
+  const wallContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (wallContainerRef.current) {
+      const centerWidth =
+        (wallContainerRef.current.scrollWidth - wallContainerRef.current.offsetWidth) / 2
+      const centerHeight =
+        (wallContainerRef.current.scrollHeight - wallContainerRef.current.offsetHeight) / 2
+      wallContainerRef.current.scrollLeft = centerWidth
+      wallContainerRef.current.scrollTop = centerHeight
+    }
+  }, [])
+
   async function handleUpload(event: ChangeEvent<HTMLInputElement>) {
     handleChange(event)
   }
@@ -82,7 +95,7 @@ function App() {
   return (
     <div>
       <h1 className='text-3xl text-center mt-2'>My wall</h1>
-      <div className='w-screen h-[500px]'>
+      <div className='w-screen h-[500px] overflow-scroll' ref={wallContainerRef}>
         <Wall
           images={images}
           onImagePositionChange={handleImagePositionChange}
@@ -92,7 +105,7 @@ function App() {
           handleDeleteImage={handleDeleteImage}
         />
       </div>
-      <div className='w-screen h-40 bg-rose-400 flex'>
+      <div className='w-screen h-40 bg-rose-400 flex fixed bottom-0'>
         {images.map(
           (image, index) =>
             isImageWithoutCoords(image) && (
@@ -109,12 +122,6 @@ function App() {
             ),
         )}
       </div>
-      {/* <Canvas */}
-      {/*   images={images} */}
-      {/*   onImagePositionChange={handleImagePositionChange} */}
-      {/*   selectedImageId={selectedImageId} */}
-      {/*   setSelectedImageId={setSelectedImageId} */}
-      {/* /> */}
       <UploadWrapper onChange={handleUpload}>
         <div className='rounded-lg px-4 py-2 border-2 border-gray-300 font-medium fixed bottom-2 -translate-x-1/2 left-1/2'>
           Upload
