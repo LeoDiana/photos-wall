@@ -73,6 +73,20 @@ function Image(
     }
   }, [xOffset, yOffset])
 
+  function adjustImagePosition(mouseX = 0, mouseY = 0) {
+    const imgElementHeight = imageRef.current!.getBoundingClientRect().height
+    const imgElementWidth = imageRef.current!.getBoundingClientRect().width
+    const direction = currentRotation < 2 ? -1 : 1
+    const maxXOffset = direction * (imgElementWidth - imageWidth)
+    const maxYOffset = direction * (imgElementHeight - imageHeight)
+    imageOffset.current = {
+      x: clamp(Math.min(maxXOffset, 0), Math.max(maxXOffset, 0), mouseX - offset.current.x),
+      y: clamp(Math.min(maxYOffset, 0), Math.max(maxYOffset, 0), mouseY - offset.current.y),
+    }
+    imageContainerRef.current!.style.left = imageOffset.current.x + 'px'
+    imageContainerRef.current!.style.top = imageOffset.current.y + 'px'
+  }
+
   function handleMouseDown(event: MouseEvent<HTMLDivElement>) {
     if (isEditingMode) {
       isDragging.current = true
@@ -86,20 +100,11 @@ function Image(
 
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
     if (isDragging.current) {
-      imageOffset.current = {
-        x: clamp(-imageRef.current!.clientWidth + imageWidth, 0, event.clientX - offset.current.x),
-        y: clamp(
-          -imageRef.current!.clientHeight + imageHeight,
-          0,
-          event.clientY - offset.current.y,
-        ),
-      }
+      adjustImagePosition(event.clientX, event.clientY)
       position.current = {
         x: event.clientX - offset.current.x,
         y: event.clientY - offset.current.y,
       }
-      imageContainerRef.current!.style.left = imageOffset.current.x + 'px'
-      imageContainerRef.current!.style.top = imageOffset.current.y + 'px'
     }
   }
 
@@ -136,16 +141,21 @@ function Image(
     event.stopPropagation()
   }
 
-  function handleRotateClockwise() {
-    setCurrentRotation((rotation) => (rotation + 1 > 4 ? 0 : rotation + 1))
+  function handleRotateClockwise(event: MouseEvent<HTMLDivElement>) {
+    setCurrentRotation((rotation) => (rotation + 1 >= 4 ? 0 : rotation + 1))
+    event.stopPropagation()
   }
 
-  function handleRotateCounterClockwise() {
+  function handleRotateCounterClockwise(event: MouseEvent<HTMLDivElement>) {
     setCurrentRotation((rotation) => (rotation - 1 < 0 ? 3 : rotation - 1))
+    event.stopPropagation()
   }
 
   useEffect(() => {
-    updateImageData(id, wallId, { rotation: currentRotation })
+    if (currentRotation !== null || currentRotation !== undefined) {
+      adjustImagePosition()
+      updateImageData(id, wallId, { rotation: currentRotation })
+    }
   }, [currentRotation])
 
   return (
@@ -158,7 +168,10 @@ function Image(
       >
         <div
           className={`relative ${isEditingMode ? 'opacity-80' : 'opacity-100'}`}
-          style={{ transform: `rotate(${currentRotation * 90}deg)` }}
+          style={{
+            rotate: `${currentRotation * 90}deg`,
+            transformOrigin: `${imageWidth / 2} ${imageHeight / 2}`,
+          }}
           ref={imageContainerRef}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
