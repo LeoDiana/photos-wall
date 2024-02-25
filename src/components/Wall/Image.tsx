@@ -6,6 +6,8 @@ import { ImageData, Position } from 'types/imageData.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
 
+import ResizeHelper from './ResizeHelper.tsx'
+
 interface ImageProps extends ImageData {
   order: number
   imageHeight?: number
@@ -40,15 +42,15 @@ function Image(
   ref: ForwardedRef<HTMLDivElement>,
 ) {
   const [isEditingMode, setIsEditingMode] = useState(false)
+  const [currentRotation, setCurrentRotation] = useState(rotation)
 
   const imageContainerRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLImageElement>(null)
+
   const position = useRef<Position>({ x: 0, y: 0 })
   const offset = useRef({ x: 0, y: 0 })
   const isDragging = useRef(false)
-  const imageRef = useRef<HTMLImageElement>(null)
-  const [isResizing, setIsResizing] = useState(false)
   const currentScale = useRef(scale)
-  const [currentRotation, setCurrentRotation] = useState(rotation)
   const imageOffset = useRef({ x: 0, y: 0 })
 
   const { wallId } = useParams() as {
@@ -113,21 +115,11 @@ function Image(
     updateImageData(id, wallId, { xOffset: imageOffset.current.x, yOffset: imageOffset.current.y })
   }
 
-  function handleMouseDownResize(event: MouseEvent<HTMLDivElement>) {
-    event.stopPropagation()
-    setIsResizing(true)
-    offset.current = {
-      x: event.clientX,
-      y: event.clientY,
-    }
-  }
-
-  function handleMouseMoveResize(event: MouseEvent<HTMLDivElement>) {
-    const difX = event.clientX - offset.current.x
+  function handleScaling(diff: number) {
     currentScale.current = clamp(
       calculateScaleFactor(originalWidth, originalHeight, imageWidth, imageHeight),
       1,
-      (originalWidth * scale + difX) / originalWidth,
+      (originalWidth * scale + diff) / originalWidth,
     )
     if (imageRef.current) {
       imageRef.current.style.width = originalWidth * currentScale.current + 'px'
@@ -135,10 +127,8 @@ function Image(
     }
   }
 
-  function handleMouseUpResize(event: MouseEvent<HTMLDivElement>) {
-    setIsResizing(false)
+  function handleScalingFinished() {
     updateImageData(id, wallId, { scale: currentScale.current })
-    event.stopPropagation()
   }
 
   function handleRotateClockwise(event: MouseEvent<HTMLDivElement>) {
@@ -152,7 +142,7 @@ function Image(
   }
 
   useEffect(() => {
-    if (currentRotation !== null || currentRotation !== undefined) {
+    if (Number.isInteger(currentRotation)) {
       adjustImagePosition()
       updateImageData(id, wallId, { rotation: currentRotation })
     }
@@ -167,7 +157,7 @@ function Image(
         onDoubleClick={() => setIsEditingMode((isEditingMode) => !isEditingMode)}
       >
         <div
-          className={`relative ${isEditingMode ? 'opacity-80' : 'opacity-100'}`}
+          className={`relative w-fit h-fit ${isEditingMode ? 'opacity-80' : 'opacity-100'}`}
           style={{
             rotate: `${currentRotation * 90}deg`,
             transformOrigin: `${imageWidth / 2} ${imageHeight / 2}`,
@@ -186,6 +176,9 @@ function Image(
               height: 'unset',
             }}
           />
+          {isEditingMode && (
+            <ResizeHelper onScaling={handleScaling} onScalingFinished={handleScalingFinished} />
+          )}
         </div>
       </div>
       {isSelected && (
@@ -195,24 +188,6 @@ function Image(
           <div onMouseDown={handleRotateClockwise}>{'->'}</div>
           <div onMouseDown={handleRotateCounterClockwise}>{'<-'}</div>
         </div>
-      )}
-      {isEditingMode && (
-        <>
-          <div
-            className='text-purple-600 text-2xl z-[9999] cursor-nesw-resize absolute top-2 right-4 bg-red-500 w-10 h-10'
-            onMouseDown={handleMouseDownResize}
-            onMouseUp={handleMouseUpResize}
-          />
-          {isResizing && (
-            <div
-              onMouseUp={handleMouseUpResize}
-              onMouseMove={handleMouseMoveResize}
-              className={
-                'fixed opacity-5 top-0 left-0 w-screen h-screen bg-rose-400 z-[9999] cursor-nesw-resize'
-              }
-            />
-          )}
-        </>
       )}
     </div>
   )
