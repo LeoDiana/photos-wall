@@ -17,7 +17,7 @@ function App() {
   const { wallId } = useParams() as {
     wallId: string
   }
-  const { handleChange, urls } = useUpload()
+  const { handleChange, urls, clear } = useUpload()
   const [images, setImages] = useState<ImageData[]>([])
 
   const movingImageIndex = useRef<number | null>(null)
@@ -41,9 +41,14 @@ function App() {
 
   useEffect(() => {
     ;(async () => {
-      if (urls.length && urls[0] !== 'loading') {
-        const photo = await addImage(urls[0], wallId)
-        setImages((images) => [...images, photo])
+      for (const url of urls) {
+        if (url !== 'loading') {
+          const photo = await addImage(url, wallId)
+          setImages((images) => [...images, photo])
+        }
+      }
+      if (urls.length > 0 && urls.every((url) => url !== 'loading')) {
+        clear()
       }
     })()
   }, [urls, wallId])
@@ -122,7 +127,7 @@ function App() {
             ),
         )}
       </div>
-      <UploadWrapper onChange={handleUpload}>
+      <UploadWrapper onChange={handleUpload} multiple>
         <div className='rounded-lg px-4 py-2 border-2 border-gray-300 font-medium fixed bottom-2 -translate-x-1/2 left-1/2'>
           Upload
         </div>
