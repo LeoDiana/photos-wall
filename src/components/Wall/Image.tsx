@@ -42,7 +42,6 @@ function Image(
   ref: ForwardedRef<HTMLDivElement>,
 ) {
   const [isEditingMode, setIsEditingMode] = useState(false)
-  // const [currentRotation, setCurrentRotation] = useState(rotation)
 
   const imageContainerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
@@ -81,7 +80,8 @@ function Image(
     const imgElementHeight = imageRef.current!.getBoundingClientRect().height
     const imgElementWidth = imageRef.current!.getBoundingClientRect().width
     const direction = currentRotation.current < 2 ? -1 : 1
-    const maxXOffset = direction * (imgElementWidth - imageWidth)
+    const directionX = [1, 2].includes(currentRotation.current) ? 1 : -1
+    const maxXOffset = directionX * (imgElementWidth - imageWidth)
     const maxYOffset = direction * (imgElementHeight - imageHeight)
     imageOffset.current = {
       x: clamp(Math.min(maxXOffset, 0), Math.max(maxXOffset, 0), mouseX - offset.current.x),
@@ -161,7 +161,7 @@ function Image(
         <div
           className={`relative w-fit h-fit ${isEditingMode ? 'opacity-80' : 'opacity-100'}`}
           style={{
-            transformOrigin: `${imageWidth / 2} ${imageHeight / 2}`,
+            transformOrigin: `${imageWidth / 2}px ${imageHeight / 2}px`,
           }}
           ref={imageContainerRef}
           onMouseDown={handleMouseDown}
