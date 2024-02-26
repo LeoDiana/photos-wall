@@ -42,7 +42,7 @@ function Image(
   ref: ForwardedRef<HTMLDivElement>,
 ) {
   const [isEditingMode, setIsEditingMode] = useState(false)
-  const [currentRotation, setCurrentRotation] = useState(rotation)
+  // const [currentRotation, setCurrentRotation] = useState(rotation)
 
   const imageContainerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
@@ -52,6 +52,7 @@ function Image(
   const isDragging = useRef(false)
   const currentScale = useRef(scale)
   const imageOffset = useRef({ x: 0, y: 0 })
+  const currentRotation = useRef(rotation)
 
   const { wallId } = useParams() as {
     wallId: string
@@ -69,16 +70,17 @@ function Image(
   }, [originalHeight, scale, originalWidth])
 
   useEffect(() => {
-    if (imageRef.current) {
+    if (imageContainerRef.current) {
       imageContainerRef.current!.style.left = xOffset + 'px'
       imageContainerRef.current!.style.top = yOffset + 'px'
+      imageContainerRef.current!.style.rotate = `${rotation * 90}deg`
     }
-  }, [xOffset, yOffset])
+  }, [xOffset, yOffset, rotation])
 
   function adjustImagePosition(mouseX = 0, mouseY = 0) {
     const imgElementHeight = imageRef.current!.getBoundingClientRect().height
     const imgElementWidth = imageRef.current!.getBoundingClientRect().width
-    const direction = currentRotation < 2 ? -1 : 1
+    const direction = currentRotation.current < 2 ? -1 : 1
     const maxXOffset = direction * (imgElementWidth - imageWidth)
     const maxYOffset = direction * (imgElementHeight - imageHeight)
     imageOffset.current = {
@@ -131,35 +133,34 @@ function Image(
     updateImageData(id, wallId, { scale: currentScale.current })
   }
 
+  function changeRotation(rotationDirection: number) {
+    currentRotation.current = (4 + currentRotation.current + rotationDirection) % 4
+    imageContainerRef.current!.style.rotate = `${currentRotation.current * 90}deg`
+    adjustImagePosition()
+    updateImageData(id, wallId, { rotation: currentRotation.current })
+  }
+
   function handleRotateClockwise(event: MouseEvent<HTMLDivElement>) {
-    setCurrentRotation((rotation) => (rotation + 1 >= 4 ? 0 : rotation + 1))
+    changeRotation(1)
     event.stopPropagation()
   }
 
   function handleRotateCounterClockwise(event: MouseEvent<HTMLDivElement>) {
-    setCurrentRotation((rotation) => (rotation - 1 < 0 ? 3 : rotation - 1))
+    changeRotation(-1)
     event.stopPropagation()
   }
-
-  useEffect(() => {
-    if (Number.isInteger(currentRotation)) {
-      adjustImagePosition()
-      updateImageData(id, wallId, { rotation: currentRotation })
-    }
-  }, [currentRotation])
 
   return (
     <div className={`absolute select-none flex`} ref={ref}>
       <div
         className={`w-[${imageWidth}px] h-[${imageHeight}px] box-content cursor-move border-8 border-amber-50 overflow-hidden shadow-md ${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
-        style={{ zIndex: order }}
+        style={{ zIndex: order, width: imageWidth, height: imageHeight }}
         onMouseDownCapture={onSelect}
         onDoubleClick={() => setIsEditingMode((isEditingMode) => !isEditingMode)}
       >
         <div
           className={`relative w-fit h-fit ${isEditingMode ? 'opacity-80' : 'opacity-100'}`}
           style={{
-            rotate: `${currentRotation * 90}deg`,
             transformOrigin: `${imageWidth / 2} ${imageHeight / 2}`,
           }}
           ref={imageContainerRef}
