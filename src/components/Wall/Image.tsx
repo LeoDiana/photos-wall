@@ -8,6 +8,8 @@ import clamp from 'utils/clamp.ts'
 
 import ResizeHelper from './ResizeHelper.tsx'
 
+const MAX_SCALE = 10
+
 interface ImageProps extends ImageData {
   isSelected: boolean
   onSelect: () => void
@@ -41,35 +43,46 @@ function Image(
   const imageRef = useRef<HTMLDivElement>(null)
   const imageContainerRef = useRef<HTMLDivElement>(null)
 
-  const position = useRef<DefinedPosition>({ x: 0, y: 0 })
-  const offset = useRef({ x: 0, y: 0 })
+  const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from start corner (Top Left)
   const isDragging = useRef(false)
   const currentScale = useRef(scale)
-  const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
+  const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // actual
+  const hotImageOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
   const currentRotation = useRef(rotation)
-  const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
+  const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight }) // actual
   const imageDimensions = useRef<Dimensions>({
     width: originalWidth * scale,
     height: originalHeight * scale,
-  })
+  }) // actual
+  const hotImageDimensions = useRef<Dimensions>({
+    width: originalWidth * scale,
+    height: originalHeight * scale,
+  }) // actual
   const hotBorderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
 
   const { wallId } = useParams() as {
     wallId: string
   }
 
-  function changeImagePosition({ x, y }: DefinedPosition) {
-    imageRef.current!.style.left = `${x}px`
-    imageRef.current!.style.top = `${y}px`
+  function changeImagePosition({ x, y }: DefinedPosition, isFinished = true) {
+    imageRef.current!.style.transform = `translate(${x}px, ${y}px)`
     imageContainerRef.current!.style.backgroundPosition = `${x}px ${y}px`
-    imageOffset.current = { x, y }
+    if (isFinished) {
+      imageOffset.current = { x, y }
+    } else {
+      hotImageOffset.current = { x, y }
+    }
   }
 
-  function changeImageSize({ width, height }: Dimensions) {
-    imageDimensions.current = { width, height }
+  function changeImageSize({ width, height }: Dimensions, isFinished = true) {
     imageRef.current!.style.width = `${width}px`
     imageRef.current!.style.height = `${height}px`
     imageContainerRef.current!.style.backgroundSize = `${width}px ${height}px`
+    if (isFinished) {
+      imageDimensions.current = { width, height }
+    } else {
+      hotImageDimensions.current = { width, height }
+    }
   }
 
   useEffect(() => {
@@ -85,30 +98,34 @@ function Image(
   useEffect(() => {
     if (imageRef.current) {
       imageRef.current!.style.rotate = `${rotation * 90}deg`
-      changeImagePosition({ x: xOffset, y: yOffset })
+      changeImagePosition({ x: xOffset || 0, y: yOffset || 0 })
     }
   }, [xOffset, yOffset, rotation])
 
-  function adjustImagePosition(mouseX = 0, mouseY = 0) {
-    const imgElementHeight = imageDimensions.current.height
-    const imgElementWidth = imageDimensions.current.width
-    const direction = currentRotation.current < 2 ? -1 : 1
-    const directionX = [1, 2].includes(currentRotation.current) ? 1 : -1
-    const maxXOffset = directionX * (imgElementWidth - borderDimensions.current.width)
-    const maxYOffset = direction * (imgElementHeight - borderDimensions.current.height)
-    imageOffset.current = {
-      x: clamp(Math.min(maxXOffset, 0), Math.max(maxXOffset, 0), mouseX - offset.current.x),
-      y: clamp(Math.min(maxYOffset, 0), Math.max(maxYOffset, 0), mouseY - offset.current.y),
-    }
-    changeImagePosition(imageOffset.current)
+  function adjustImagePosition(newOffsetX = 0, newOffsetY = 0, isFinished: boolean) {
+    const imageWidth = isFinished ? imageDimensions.current.width : hotImageDimensions.current.width
+    const imageHeight = isFinished
+      ? imageDimensions.current.height
+      : hotImageDimensions.current.height
+    const direction = -1 // currentRotation.current < 2 ? -1 : 1
+    const directionX = -1 //[1, 2].includes(currentRotation.current) ? 1 : -1
+    const maxXOffset = directionX * (imageWidth - borderDimensions.current.width)
+    const maxYOffset = direction * (imageHeight - borderDimensions.current.height)
+    changeImagePosition(
+      {
+        x: clamp(Math.min(maxXOffset, 0), Math.max(maxXOffset, 0), newOffsetX),
+        y: clamp(Math.min(maxYOffset, 0), Math.max(maxYOffset, 0), newOffsetY),
+      },
+      isFinished,
+    )
   }
 
   function handleMouseDown(event: MouseEvent<HTMLDivElement>) {
     if (isEditingMode) {
       isDragging.current = true
-      offset.current = {
-        x: event.clientX - (position.current.x || 0),
-        y: event.clientY - (position.current.y || 0),
+      mouseOffset.current = {
+        x: event.clientX - imageOffset.current.x,
+        y: event.clientY - imageOffset.current.y,
       }
       event.stopPropagation()
     }
@@ -116,41 +133,80 @@ function Image(
 
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
     if (isDragging.current) {
-      adjustImagePosition(event.clientX, event.clientY)
-      position.current = {
-        x: event.clientX - offset.current.x,
-        y: event.clientY - offset.current.y,
+      hotImageOffset.current = {
+        x: event.clientX - mouseOffset.current.x,
+        y: event.clientY - mouseOffset.current.y,
       }
+      adjustImagePosition(hotImageOffset.current.x, hotImageOffset.current.y, false)
     }
   }
 
   function handleMouseUp() {
     isDragging.current = false
+    imageOffset.current = hotImageOffset.current
     updateImageData(id, wallId, { xOffset: imageOffset.current.x, yOffset: imageOffset.current.y })
   }
 
-  function handleScaling(diff: number) {
-    currentScale.current = clamp(
+  function handleScaling({
+    nwCornerDif,
+    seCornerDif,
+  }: {
+    difX: number
+    difY: number
+    nwCornerDif: DefinedPosition
+    seCornerDif: DefinedPosition
+  }) {
+    const suggestedWidth = imageDimensions.current.width + nwCornerDif.x + seCornerDif.x
+    const suggestedHeight = imageDimensions.current.height + nwCornerDif.y + seCornerDif.y
+
+    const scaleX: number = suggestedWidth / imageDimensions.current.width
+    const scaleY: number = suggestedHeight / imageDimensions.current.height
+    const scale: number = Math.min(scaleX, scaleY)
+
+    const scaledWidth = imageDimensions.current.width * scale
+    const scaledHeight = imageDimensions.current.height * scale
+
+    const scaleFactor = clamp(
       calculateScaleFactor(
         originalWidth,
         originalHeight,
         borderDimensions.current.width,
         borderDimensions.current.height,
       ),
-      100,
-      (originalWidth * scale + diff) / originalWidth,
+      MAX_SCALE,
+      calculateScaleFactor(originalWidth, originalHeight, scaledWidth, scaledHeight),
     )
-    if (imageRef.current) {
-      changeImageSize({
-        width: originalWidth * currentScale.current,
-        height: originalHeight * currentScale.current,
-      })
-      adjustImagePosition()
-    }
+    currentScale.current = scaleFactor
+
+    const actualWidth = originalWidth * scaleFactor
+    const actualHeight = originalHeight * scaleFactor
+
+    changeImageSize(
+      {
+        width: actualWidth,
+        height: actualHeight,
+      },
+      false,
+    )
+
+    const signX = nwCornerDif.x ? 1 : 0
+    const signY = nwCornerDif.y ? 1 : 0
+
+    adjustImagePosition(
+      imageOffset.current.x + (imageDimensions.current.width - actualWidth) * signX,
+      imageOffset.current.y + (imageDimensions.current.height - actualHeight) * signY,
+      false,
+    )
   }
 
   function handleScalingFinished() {
-    updateImageData(id, wallId, { scale: currentScale.current })
+    imageOffset.current = hotImageOffset.current
+    imageDimensions.current = hotImageDimensions.current
+    updateImageData(id, wallId, {
+      scale: currentScale.current,
+      xOffset: imageOffset.current.x,
+      yOffset: imageOffset.current.y,
+    })
   }
 
   function handleBorderResize(diffX: number, diffY: number) {
@@ -184,7 +240,7 @@ function Image(
   function changeRotation(rotationDirection: number) {
     currentRotation.current = (4 + currentRotation.current + rotationDirection) % 4
     imageRef.current!.style.rotate = `${currentRotation.current * 90}deg`
-    adjustImagePosition()
+    // adjustImagePosition()
     updateImageData(id, wallId, { rotation: currentRotation.current })
   }
 
