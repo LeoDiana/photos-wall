@@ -4,7 +4,10 @@ import { db } from '../firebaseInstances.ts'
 import { ImageData } from '../types/imageData.ts'
 
 type UpdateImageDataProps = Partial<
-  Pick<ImageData, 'x' | 'y' | 'scale' | 'xOffset' | 'yOffset' | 'rotation'>
+  Pick<
+    ImageData,
+    'x' | 'y' | 'scale' | 'xOffset' | 'yOffset' | 'rotation' | 'borderHeight' | 'borderWidth'
+  >
 >
 
 async function updateImageData(id: string, wallId = 'photos', data: UpdateImageDataProps) {

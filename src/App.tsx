@@ -1,7 +1,6 @@
 import { ChangeEvent, MouseEvent, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
-import UploadWrapper from 'components/UploadWrapper'
 import Wall from 'components/Wall/Wall.tsx'
 import useUpload from 'hooks/useUpload.ts'
 import { ImageData } from 'types/imageData.ts'
@@ -110,31 +109,31 @@ function App() {
           handleDeleteImage={handleDeleteImage}
         />
       </div>
-      <div className='w-screen h-40 bg-rose-400 flex fixed bottom-0'>
-        {images.map(
-          (image, index) =>
-            isImageWithoutCoords(image) && (
-              <div
-                key={image.id}
-                className='h-[100px] w-[100px]'
-                draggable
-                onDragEnd={() => {
-                  movingImageIndex.current = index
-                }}
-              >
-                <img src={image.src} draggable={false} />
-              </div>
-            ),
-        )}
-      </div>
-      <UploadWrapper onChange={handleUpload} multiple>
-        <div className='rounded-lg px-4 py-2 border-2 border-gray-300 font-medium fixed bottom-2 -translate-x-1/2 left-1/2'>
-          Upload
-        </div>
-      </UploadWrapper>
-      {urls.some((url) => url === 'loading') && (
-        <div className='font-medium fixed bottom-1 -translate-x-1/2 left-1/2'>LOADING...</div>
-      )}
+      {/* <div className='w-screen h-40 bg-rose-400 flex fixed bottom-0'> */}
+      {/*   {images.map( */}
+      {/*     (image, index) => */}
+      {/*       isImageWithoutCoords(image) && ( */}
+      {/*         <div */}
+      {/*           key={image.id} */}
+      {/*           className='h-[100px] w-[100px]' */}
+      {/*           draggable */}
+      {/*           onDragEnd={() => { */}
+      {/*             movingImageIndex.current = index */}
+      {/*           }} */}
+      {/*         > */}
+      {/*           <img src={image.src} draggable={false} /> */}
+      {/*         </div> */}
+      {/*       ), */}
+      {/*   )} */}
+      {/* </div> */}
+      {/* <UploadWrapper onChange={handleUpload} multiple> */}
+      {/*   <div className='rounded-lg px-4 py-2 border-2 border-gray-300 font-medium fixed bottom-2 -translate-x-1/2 left-1/2'> */}
+      {/*     Upload */}
+      {/*   </div> */}
+      {/* </UploadWrapper> */}
+      {/* {urls.some((url) => url === 'loading') && ( */}
+      {/*   <div className='font-medium fixed bottom-1 -translate-x-1/2 left-1/2'>LOADING...</div> */}
+      {/* )} */}
     </div>
   )
 }

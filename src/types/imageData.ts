@@ -1,3 +1,13 @@
+export interface DefinedPosition {
+  x: number
+  y: number
+}
+
+export interface Dimensions {
+  width: number
+  height: number
+}
+
 export interface ImageData {
   id: string
   src: string
@@ -10,6 +20,8 @@ export interface ImageData {
   xOffset: number | null
   yOffset: number | null
   rotation: number
+  borderWidth: number
+  borderHeight: number
 }
 
 export interface Position {

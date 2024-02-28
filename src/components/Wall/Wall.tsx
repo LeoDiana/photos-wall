@@ -144,7 +144,7 @@ function Wall({
         <div onClick={zoomOut}>-</div>
       </div>
       <div
-        className={`bg-teal-100 absolute overflow-hidden origin-top-left`}
+        className={`bg-teal-50 absolute overflow-hidden origin-top-left`}
         style={{ width: WALL_WIDTH + 'px', height: WALL_HEIGHT + 'px' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}

@@ -2,24 +2,18 @@ import { ForwardedRef, forwardRef, MouseEvent, useEffect, useRef, useState } fro
 import { useParams } from 'react-router-dom'
 
 import { updateImageData } from 'api'
-import { ImageData, Position } from 'types/imageData.ts'
+import { DefinedPosition, Dimensions, ImageData } from 'types/imageData.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
 
 import ResizeHelper from './ResizeHelper.tsx'
 
 interface ImageProps extends ImageData {
-  order: number
-  imageHeight?: number
-  imageWidth?: number
   isSelected: boolean
   onSelect: () => void
   onRemoveFromWall: () => void
   onDeleteImage: () => void
 }
-
-const IMAGE_HEIGHT = 250
-const IMAGE_WIDTH = 250
 
 function Image(
   {
@@ -36,25 +30,46 @@ function Image(
     onDeleteImage,
     isSelected = false,
     order = 0,
-    imageHeight = IMAGE_HEIGHT,
-    imageWidth = IMAGE_WIDTH,
+    borderHeight,
+    borderWidth,
   }: ImageProps,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
   const [isEditingMode, setIsEditingMode] = useState(false)
 
+  const borderRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLDivElement>(null)
   const imageContainerRef = useRef<HTMLDivElement>(null)
-  const imageRef = useRef<HTMLImageElement>(null)
 
-  const position = useRef<Position>({ x: 0, y: 0 })
+  const position = useRef<DefinedPosition>({ x: 0, y: 0 })
   const offset = useRef({ x: 0, y: 0 })
   const isDragging = useRef(false)
   const currentScale = useRef(scale)
-  const imageOffset = useRef({ x: 0, y: 0 })
+  const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
   const currentRotation = useRef(rotation)
+  const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
+  const imageDimensions = useRef<Dimensions>({
+    width: originalWidth * scale,
+    height: originalHeight * scale,
+  })
+  const hotBorderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
 
   const { wallId } = useParams() as {
     wallId: string
+  }
+
+  function changeImagePosition({ x, y }: DefinedPosition) {
+    imageRef.current!.style.left = `${x}px`
+    imageRef.current!.style.top = `${y}px`
+    imageContainerRef.current!.style.backgroundPosition = `${x}px ${y}px`
+    imageOffset.current = { x, y }
+  }
+
+  function changeImageSize({ width, height }: Dimensions) {
+    imageDimensions.current = { width, height }
+    imageRef.current!.style.width = `${width}px`
+    imageRef.current!.style.height = `${height}px`
+    imageContainerRef.current!.style.backgroundSize = `${width}px ${height}px`
   }
 
   useEffect(() => {
@@ -63,32 +78,29 @@ function Image(
 
   useEffect(() => {
     if (imageRef.current) {
-      imageRef.current.style.width = originalWidth * scale + 'px'
-      imageRef.current.style.height = originalHeight * scale + 'px'
+      changeImageSize({ width: originalWidth * scale, height: originalHeight * scale })
     }
   }, [originalHeight, scale, originalWidth])
 
   useEffect(() => {
-    if (imageContainerRef.current) {
-      imageContainerRef.current!.style.left = xOffset + 'px'
-      imageContainerRef.current!.style.top = yOffset + 'px'
-      imageContainerRef.current!.style.rotate = `${rotation * 90}deg`
+    if (imageRef.current) {
+      imageRef.current!.style.rotate = `${rotation * 90}deg`
+      changeImagePosition({ x: xOffset, y: yOffset })
     }
   }, [xOffset, yOffset, rotation])
 
   function adjustImagePosition(mouseX = 0, mouseY = 0) {
-    const imgElementHeight = imageRef.current!.getBoundingClientRect().height
-    const imgElementWidth = imageRef.current!.getBoundingClientRect().width
+    const imgElementHeight = imageDimensions.current.height
+    const imgElementWidth = imageDimensions.current.width
     const direction = currentRotation.current < 2 ? -1 : 1
     const directionX = [1, 2].includes(currentRotation.current) ? 1 : -1
-    const maxXOffset = directionX * (imgElementWidth - imageWidth)
-    const maxYOffset = direction * (imgElementHeight - imageHeight)
+    const maxXOffset = directionX * (imgElementWidth - borderDimensions.current.width)
+    const maxYOffset = direction * (imgElementHeight - borderDimensions.current.height)
     imageOffset.current = {
       x: clamp(Math.min(maxXOffset, 0), Math.max(maxXOffset, 0), mouseX - offset.current.x),
       y: clamp(Math.min(maxYOffset, 0), Math.max(maxYOffset, 0), mouseY - offset.current.y),
     }
-    imageContainerRef.current!.style.left = imageOffset.current.x + 'px'
-    imageContainerRef.current!.style.top = imageOffset.current.y + 'px'
+    changeImagePosition(imageOffset.current)
   }
 
   function handleMouseDown(event: MouseEvent<HTMLDivElement>) {
@@ -119,13 +131,21 @@ function Image(
 
   function handleScaling(diff: number) {
     currentScale.current = clamp(
-      calculateScaleFactor(originalWidth, originalHeight, imageWidth, imageHeight),
-      1,
+      calculateScaleFactor(
+        originalWidth,
+        originalHeight,
+        borderDimensions.current.width,
+        borderDimensions.current.height,
+      ),
+      100,
       (originalWidth * scale + diff) / originalWidth,
     )
     if (imageRef.current) {
-      imageRef.current.style.width = originalWidth * currentScale.current + 'px'
-      imageRef.current.style.height = originalHeight * currentScale.current + 'px'
+      changeImageSize({
+        width: originalWidth * currentScale.current,
+        height: originalHeight * currentScale.current,
+      })
+      adjustImagePosition()
     }
   }
 
@@ -133,9 +153,37 @@ function Image(
     updateImageData(id, wallId, { scale: currentScale.current })
   }
 
+  function handleBorderResize(diffX: number, diffY: number) {
+    const newWidth = clamp(
+      0,
+      imageDimensions.current.width + imageOffset.current.x,
+      borderDimensions.current.width + diffX,
+    )
+    const newHeight = clamp(
+      0,
+      imageDimensions.current.height + imageOffset.current.y,
+      borderDimensions.current.height + diffY,
+    )
+    borderRef.current!.style.width = `${newWidth}px`
+    imageContainerRef.current!.style.width = `${newWidth}px`
+
+    borderRef.current!.style.height = `${newHeight}px`
+    imageContainerRef.current!.style.height = `${newHeight}px`
+
+    hotBorderDimensions.current = { width: newWidth, height: newHeight }
+  }
+
+  function handleBorderResizeFinished() {
+    borderDimensions.current = hotBorderDimensions.current
+    updateImageData(id, wallId, {
+      borderWidth: borderDimensions.current.width,
+      borderHeight: borderDimensions.current.height,
+    })
+  }
+
   function changeRotation(rotationDirection: number) {
     currentRotation.current = (4 + currentRotation.current + rotationDirection) % 4
-    imageContainerRef.current!.style.rotate = `${currentRotation.current * 90}deg`
+    imageRef.current!.style.rotate = `${currentRotation.current * 90}deg`
     adjustImagePosition()
     updateImageData(id, wallId, { rotation: currentRotation.current })
   }
@@ -153,43 +201,61 @@ function Image(
   return (
     <div className={`absolute select-none flex`} ref={ref}>
       <div
-        className={`w-[${imageWidth}px] h-[${imageHeight}px] box-content cursor-move border-8 border-amber-50 overflow-hidden shadow-md ${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
-        style={{ zIndex: order, width: imageWidth, height: imageHeight }}
+        className={`w-[${borderWidth}px] h-[${borderHeight}px] box-content cursor-move overflow-hidden ${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
+        style={{
+          zIndex: order,
+          width: borderWidth,
+          height: borderHeight,
+        }}
         onMouseDownCapture={onSelect}
         onDoubleClick={() => setIsEditingMode((isEditingMode) => !isEditingMode)}
+        ref={borderRef}
       >
+        <ResizeHelper
+          onScaling={handleBorderResize}
+          onScalingFinished={handleBorderResizeFinished}
+          variant='border'
+        />
         <div
-          className={`relative w-fit h-fit ${isEditingMode ? 'opacity-80' : 'opacity-100'}`}
-          style={{
-            transformOrigin: `${imageWidth / 2}px ${imageHeight / 2}px`,
-          }}
           ref={imageContainerRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
+          style={{
+            background: `url(${src}`,
+            backgroundSize: `${originalWidth * scale}px ${originalHeight * scale}px`,
+            width: borderWidth,
+            height: borderHeight,
+          }}
         >
-          <img
-            ref={imageRef}
-            src={src}
-            draggable={false}
+          <div
+            className={`relative w-fit h-fit`}
             style={{
-              maxWidth: 'unset',
-              height: 'unset',
+              transformOrigin: `${borderWidth / 2}px ${borderHeight / 2}px`,
+              background: `url(${src}`,
+              backgroundSize: 'contain',
+              opacity: '50%',
             }}
-          />
-          {isEditingMode && (
-            <ResizeHelper onScaling={handleScaling} onScalingFinished={handleScalingFinished} />
-          )}
+            ref={imageRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          >
+            {isEditingMode && (
+              <ResizeHelper
+                onScaling={handleScaling}
+                onScalingFinished={handleScalingFinished}
+                variant='image'
+              />
+            )}
+          </div>
         </div>
       </div>
-      {isSelected && (
-        <div className='text-pink-600 text-2xl z-[9999]'>
-          <div onMouseDown={onDeleteImage}>x</div>
-          <div onMouseDown={onRemoveFromWall}>!</div>
-          <div onMouseDown={handleRotateClockwise}>{'->'}</div>
-          <div onMouseDown={handleRotateCounterClockwise}>{'<-'}</div>
-        </div>
-      )}
+      {/* {isSelected && ( */}
+      {/*   <div className='text-pink-600 text-2xl z-[9999]'> */}
+      {/*     <div onMouseDown={onDeleteImage}>x</div> */}
+      {/*     <div onMouseDown={onRemoveFromWall}>!</div> */}
+      {/*     <div onMouseDown={handleRotateClockwise}>{'->'}</div> */}
+      {/*     <div onMouseDown={handleRotateCounterClockwise}>{'<-'}</div> */}
+      {/*   </div> */}
+      {/* )} */}
     </div>
   )
 }
