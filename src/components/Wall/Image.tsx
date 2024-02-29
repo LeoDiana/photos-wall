@@ -46,18 +46,18 @@ function Image(
   const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from start corner (Top Left)
   const isDragging = useRef(false)
   const currentScale = useRef(scale)
-  const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // actual
-  const hotImageOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
+  const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // saved
+  const hotImageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // in progress
   const currentRotation = useRef(rotation)
-  const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight }) // actual
+  const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
   const imageDimensions = useRef<Dimensions>({
     width: originalWidth * scale,
     height: originalHeight * scale,
-  }) // actual
+  })
   const hotImageDimensions = useRef<Dimensions>({
     width: originalWidth * scale,
     height: originalHeight * scale,
-  }) // actual
+  })
   const hotBorderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
 
   const { wallId } = useParams() as {
@@ -69,9 +69,8 @@ function Image(
     imageContainerRef.current!.style.backgroundPosition = `${x}px ${y}px`
     if (isFinished) {
       imageOffset.current = { x, y }
-    } else {
-      hotImageOffset.current = { x, y }
     }
+    hotImageOffset.current = { x, y }
   }
 
   function changeImageSize({ width, height }: Dimensions, isFinished = true) {
@@ -80,9 +79,8 @@ function Image(
     imageContainerRef.current!.style.backgroundSize = `${width}px ${height}px`
     if (isFinished) {
       imageDimensions.current = { width, height }
-    } else {
-      hotImageDimensions.current = { width, height }
     }
+    hotImageDimensions.current = { width, height }
   }
 
   useEffect(() => {
@@ -181,22 +179,43 @@ function Image(
     const actualWidth = originalWidth * scaleFactor
     const actualHeight = originalHeight * scaleFactor
 
-    changeImageSize(
-      {
-        width: actualWidth,
-        height: actualHeight,
-      },
-      false,
-    )
-
     const signX = nwCornerDif.x ? 1 : 0
     const signY = nwCornerDif.y ? 1 : 0
 
-    adjustImagePosition(
-      imageOffset.current.x + (imageDimensions.current.width - actualWidth) * signX,
-      imageOffset.current.y + (imageDimensions.current.height - actualHeight) * signY,
-      false,
+    const newXoffset = imageOffset.current.x + (imageDimensions.current.width - actualWidth) * signX
+    const newYoffset =
+      imageOffset.current.y + (imageDimensions.current.height - actualHeight) * signY
+
+    const adjustedWidth = Math.max(-newXoffset + borderDimensions.current.width, actualWidth)
+    const adjustedHeight = Math.max(-newYoffset + borderDimensions.current.height, actualHeight)
+
+    const adjustedXoffset = Math.min(0, newXoffset)
+    const adjustedYoffset = Math.min(0, newYoffset)
+
+    const wasAdjusted = !(
+      adjustedWidth === actualWidth &&
+      adjustedHeight === actualHeight &&
+      adjustedXoffset === newXoffset &&
+      adjustedYoffset === newYoffset
     )
+
+    if (!wasAdjusted) {
+      changeImageSize(
+        {
+          width: adjustedWidth,
+          height: adjustedHeight,
+        },
+        false,
+      )
+
+      changeImagePosition(
+        {
+          x: adjustedXoffset,
+          y: adjustedYoffset,
+        },
+        false,
+      )
+    }
   }
 
   function handleScalingFinished() {
