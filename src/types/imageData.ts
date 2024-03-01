@@ -22,6 +22,8 @@ export interface ImageData {
   rotation: number
   borderWidth: number
   borderHeight: number
+  borderOffsetX: number
+  borderOffsetY: number
 }
 
 export interface Position {

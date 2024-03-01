@@ -3,12 +3,17 @@ import { useParams } from 'react-router-dom'
 
 import { updateImageData } from 'api'
 import { DefinedPosition, Dimensions, ImageData } from 'types/imageData.ts'
-import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
+
+import calculateScaleFactor from '../../utils/calculateScaleFactor.ts'
 
 import ResizeHelper from './ResizeHelper.tsx'
 
 const MAX_SCALE = 10
+const MIN_BORDER_WIDTH = 50
+const MAX_BORDER_WIDTH = 1000
+const MIN_BORDER_HEIGHT = 50
+const MAX_BORDER_HEIGHT = 1000
 
 interface ImageProps extends ImageData {
   isSelected: boolean
@@ -34,6 +39,8 @@ function Image(
     order = 0,
     borderHeight,
     borderWidth,
+    borderOffsetX,
+    borderOffsetY,
   }: ImageProps,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
@@ -46,10 +53,11 @@ function Image(
   const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from start corner (Top Left)
   const isDragging = useRef(false)
   const currentScale = useRef(scale)
+  const currentRotation = useRef(rotation)
+
   const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // saved
   const hotImageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // in progress
-  const currentRotation = useRef(rotation)
-  const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
+
   const imageDimensions = useRef<Dimensions>({
     width: originalWidth * scale,
     height: originalHeight * scale,
@@ -58,7 +66,12 @@ function Image(
     width: originalWidth * scale,
     height: originalHeight * scale,
   })
+
+  const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
   const hotBorderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
+
+  const borderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
+  const hotBorderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
 
   const { wallId } = useParams() as {
     wallId: string
@@ -83,22 +96,52 @@ function Image(
     hotImageDimensions.current = { width, height }
   }
 
+  function changeBorderPosition({ x, y }: DefinedPosition, isFinished = true) {
+    borderRef.current!.style.transform = `translate(${x}px, ${y}px)`
+    if (isFinished) {
+      borderOffset.current = { x, y }
+    }
+    hotBorderOffset.current = { x, y }
+  }
+
+  function changeBorderSize({ width, height }: Dimensions, isFinished = true) {
+    borderRef.current!.style.width = `${width}px`
+    borderRef.current!.style.height = `${height}px`
+
+    if (isFinished) {
+      borderDimensions.current = { width, height }
+    }
+    hotBorderDimensions.current = { width, height }
+  }
+
   useEffect(() => {
     setIsEditingMode(false)
   }, [isSelected])
 
   useEffect(() => {
-    if (imageRef.current) {
+    if (imageRef.current && imageContainerRef.current) {
       changeImageSize({ width: originalWidth * scale, height: originalHeight * scale })
     }
   }, [originalHeight, scale, originalWidth])
 
   useEffect(() => {
-    if (imageRef.current) {
+    if (imageRef.current && imageContainerRef.current) {
       imageRef.current!.style.rotate = `${rotation * 90}deg`
       changeImagePosition({ x: xOffset || 0, y: yOffset || 0 })
     }
   }, [xOffset, yOffset, rotation])
+
+  useEffect(() => {
+    if (borderRef.current) {
+      changeBorderSize({ width: borderWidth, height: borderHeight })
+    }
+  }, [borderWidth, borderHeight])
+
+  useEffect(() => {
+    if (borderRef.current) {
+      changeBorderPosition({ x: borderOffsetX, y: borderOffsetY })
+    }
+  }, [borderOffsetX, borderOffsetY])
 
   function adjustImagePosition(newOffsetX = 0, newOffsetY = 0, isFinished: boolean) {
     const imageWidth = isFinished ? imageDimensions.current.width : hotImageDimensions.current.width
@@ -228,31 +271,50 @@ function Image(
     })
   }
 
-  function handleBorderResize(diffX: number, diffY: number) {
-    const newWidth = clamp(
-      0,
-      imageDimensions.current.width + imageOffset.current.x,
-      borderDimensions.current.width + diffX,
-    )
-    const newHeight = clamp(
-      0,
-      imageDimensions.current.height + imageOffset.current.y,
-      borderDimensions.current.height + diffY,
-    )
-    borderRef.current!.style.width = `${newWidth}px`
-    imageContainerRef.current!.style.width = `${newWidth}px`
+  function handleBorderResize({
+    nwCornerDif,
+    seCornerDif,
+  }: {
+    difX: number
+    difY: number
+    nwCornerDif: DefinedPosition
+    seCornerDif: DefinedPosition
+  }) {
+    const suggestedWidth = borderDimensions.current.width + nwCornerDif.x + seCornerDif.x
+    const suggestedHeight = borderDimensions.current.height + nwCornerDif.y + seCornerDif.y
 
-    borderRef.current!.style.height = `${newHeight}px`
-    imageContainerRef.current!.style.height = `${newHeight}px`
+    const newWidth = clamp(MIN_BORDER_WIDTH, MAX_BORDER_WIDTH, suggestedWidth)
+    const newHeight = clamp(MIN_BORDER_HEIGHT, MAX_BORDER_HEIGHT, suggestedHeight)
 
-    hotBorderDimensions.current = { width: newWidth, height: newHeight }
+    changeBorderSize({ width: newWidth, height: newHeight }, false)
+
+    const newOffsetX = borderOffset.current.x - nwCornerDif.x
+    const newOffsetY = borderOffset.current.y - nwCornerDif.y
+
+    changeBorderPosition({ x: newOffsetX, y: newOffsetY }, false)
+
+    const scale = calculateScaleFactor(
+      originalWidth,
+      originalHeight,
+      hotBorderDimensions.current.width,
+      hotBorderDimensions.current.height,
+    )
+
+    currentScale.current = scale
+
+    changeImageSize({ width: originalWidth * scale, height: originalHeight * scale })
+    adjustImagePosition(0, 0, false)
   }
 
   function handleBorderResizeFinished() {
     borderDimensions.current = hotBorderDimensions.current
+    borderOffset.current = hotBorderOffset.current
     updateImageData(id, wallId, {
       borderWidth: borderDimensions.current.width,
       borderHeight: borderDimensions.current.height,
+      borderOffsetX: borderOffset.current.x,
+      borderOffsetY: borderOffset.current.y,
+      scale: currentScale.current,
     })
   }
 
@@ -276,7 +338,7 @@ function Image(
   return (
     <div className={`absolute select-none flex`} ref={ref}>
       <div
-        className={`w-[${borderWidth}px] h-[${borderHeight}px] box-content cursor-move overflow-hidden ${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
+        className={`w-[${borderWidth}px] h-[${borderHeight}px] box-content cursor-move`}
         style={{
           zIndex: order,
           width: borderWidth,
@@ -292,34 +354,39 @@ function Image(
           variant='border'
         />
         <div
-          ref={imageContainerRef}
-          style={{
-            background: `url(${src}`,
-            backgroundSize: `${originalWidth * scale}px ${originalHeight * scale}px`,
-            width: borderWidth,
-            height: borderHeight,
-          }}
+          className={`${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
+          style={{ width: 'inherit', height: 'inherit' }}
         >
           <div
-            className={`relative w-fit h-fit`}
+            ref={imageContainerRef}
             style={{
-              transformOrigin: `${borderWidth / 2}px ${borderHeight / 2}px`,
               background: `url(${src}`,
-              backgroundSize: 'contain',
-              opacity: '50%',
+              backgroundSize: `${originalWidth * scale}px ${originalHeight * scale}px`,
+              width: 'inherit',
+              height: 'inherit',
             }}
-            ref={imageRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
           >
-            {isEditingMode && (
-              <ResizeHelper
-                onScaling={handleScaling}
-                onScalingFinished={handleScalingFinished}
-                variant='image'
-              />
-            )}
+            <div
+              className={`relative w-fit h-fit`}
+              style={{
+                transformOrigin: `${borderWidth / 2}px ${borderHeight / 2}px`,
+                background: `url(${src}`,
+                backgroundSize: 'contain',
+                opacity: '50%',
+              }}
+              ref={imageRef}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+            >
+              {isEditingMode && (
+                <ResizeHelper
+                  onScaling={handleScaling}
+                  onScalingFinished={handleScalingFinished}
+                  variant='image'
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

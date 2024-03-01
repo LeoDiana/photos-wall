@@ -6,7 +6,16 @@ import { ImageData } from '../types/imageData.ts'
 type UpdateImageDataProps = Partial<
   Pick<
     ImageData,
-    'x' | 'y' | 'scale' | 'xOffset' | 'yOffset' | 'rotation' | 'borderHeight' | 'borderWidth'
+    | 'x'
+    | 'y'
+    | 'scale'
+    | 'xOffset'
+    | 'yOffset'
+    | 'rotation'
+    | 'borderHeight'
+    | 'borderWidth'
+    | 'borderOffsetX'
+    | 'borderOffsetY'
   >
 >
 

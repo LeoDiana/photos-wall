@@ -38,6 +38,8 @@ async function addImage(src: string, wallId = 'photos') {
     originalWidth: dimensions.width,
     borderHeight: IMAGE_HEIGHT,
     borderWidth: IMAGE_WIDTH,
+    borderOffsetX: 0,
+    borderOffsetY: 0,
     xOffset: null,
     yOffset: null,
     rotation: 0,
