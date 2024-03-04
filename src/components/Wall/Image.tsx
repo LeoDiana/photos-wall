@@ -52,7 +52,6 @@ function Image(
 
   const borderRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
-  const imageContainerRef = useRef<HTMLDivElement>(null)
   const imageInBorderRef = useRef<HTMLDivElement>(null)
 
   const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from start corner (Top Left)
@@ -79,6 +78,7 @@ function Image(
   const hotBorderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
 
   const rect = imageRef.current?.getBoundingClientRect()
+  const ratio = originalWidth / originalHeight
 
   const { wallId } = useParams() as {
     wallId: string
@@ -134,13 +134,13 @@ function Image(
   }, [isSelected])
 
   useEffect(() => {
-    if (imageRef.current && imageContainerRef.current) {
+    if (imageRef.current && imageInBorderRef.current) {
       changeImageSize({ width: originalWidth * scale, height: originalHeight * scale })
     }
   }, [originalHeight, scale, originalWidth])
 
   useEffect(() => {
-    if (imageRef.current && imageContainerRef.current) {
+    if (imageRef.current && imageInBorderRef.current) {
       changeImageRotation(rotation)
       changeImagePosition({ x: xOffset || 0, y: yOffset || 0 })
     }
@@ -333,60 +333,52 @@ function Image(
     })
   }
 
-  function handleRotating(angle: number) {
-    currentRotation.current = angle
-    changeImageRotation(angle)
-
-    const A = { x: hotImageOffset.current.x, y: hotImageOffset.current.y }
+  function calcCornersCoords(dimensions: Dimensions, position: DefinedPosition, angle = 0) {
+    const A = { x: position.x, y: position.y }
     const B = {
-      x: hotImageDimensions.current.width + hotImageOffset.current.x,
-      y: hotImageOffset.current.y,
+      x: dimensions.width + position.x,
+      y: position.y,
     }
     const C = {
-      x: hotImageDimensions.current.width + hotImageOffset.current.x,
-      y: hotImageDimensions.current.height + hotImageOffset.current.y,
+      x: dimensions.width + position.x,
+      y: dimensions.height + position.y,
     }
     const D = {
-      x: hotImageOffset.current.x,
-      y: hotImageDimensions.current.height + hotImageOffset.current.y,
+      x: position.x,
+      y: dimensions.height + position.y,
     }
 
     const center = {
-      x: hotImageDimensions.current.width / 2,
-      y: hotImageDimensions.current.height / 2,
+      x: dimensions.width / 2,
+      y: dimensions.height / 2,
     }
 
-    const A1 = rotatePoint(center, A, angle)
-    const B1 = rotatePoint(center, B, angle)
-    const C1 = rotatePoint(center, C, angle)
-    const D1 = rotatePoint(center, D, angle)
+    return {
+      A: rotatePoint(center, A, angle),
+      B: rotatePoint(center, B, angle),
+      C: rotatePoint(center, C, angle),
+      D: rotatePoint(center, D, angle),
+    }
+  }
 
-    const a = {
-      x: 0,
-      y: 0,
-    }
-    const b = {
-      x: borderDimensions.current.width,
-      y: 0,
-    }
-    const c = {
-      x: borderDimensions.current.width,
-      y: borderDimensions.current.height,
-    }
-    const d = {
-      x: 0,
-      y: borderDimensions.current.height,
-    }
+  function handleRotating(angle: number) {
+    changeImageRotation(angle)
+
+    const { A, B, C, D } = calcCornersCoords(
+      hotImageDimensions.current,
+      hotImageOffset.current,
+      angle,
+    )
+    const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
 
     const corners = [a, b, c, d]
     corners.forEach((corner) => {
-      const da = distanceFromPointToLine(D1, A1, corner)
+      const da = distanceFromPointToLine(D, A, corner)
       if (da < 0) {
         changeImagePosition(
           { x: hotImageOffset.current.x + da, y: hotImageOffset.current.y },
           false,
         )
-        const ratio = originalWidth / originalHeight
         changeImageSize(
           {
             width: hotImageDimensions.current.width + Math.abs(da),
@@ -396,13 +388,12 @@ function Image(
         )
       }
 
-      const ab = distanceFromPointToLine(A1, B1, corner)
+      const ab = distanceFromPointToLine(A, B, corner)
       if (ab < 0) {
         changeImagePosition(
           { x: hotImageOffset.current.x, y: hotImageOffset.current.y + ab },
           false,
         )
-        const ratio = originalWidth / originalHeight
         changeImageSize(
           {
             width: (hotImageDimensions.current.height + Math.abs(ab)) * ratio,
@@ -412,13 +403,12 @@ function Image(
         )
       }
 
-      const bc = distanceFromPointToLine(B1, C1, corner)
+      const bc = distanceFromPointToLine(B, C, corner)
       if (bc < 0) {
         changeImagePosition(
           { x: hotImageOffset.current.x - bc, y: hotImageOffset.current.y },
           false,
         )
-        const ratio = originalWidth / originalHeight
         changeImageSize(
           {
             width: hotImageDimensions.current.width + Math.abs(bc),
@@ -428,13 +418,12 @@ function Image(
         )
       }
 
-      const cd = distanceFromPointToLine(C1, D1, corner)
+      const cd = distanceFromPointToLine(C, D, corner)
       if (cd < 0) {
         changeImagePosition(
           { x: hotImageOffset.current.x, y: hotImageOffset.current.y - cd },
           false,
         )
-        const ratio = originalWidth / originalHeight
         changeImageSize(
           {
             width: (hotImageDimensions.current.height + Math.abs(cd)) * ratio,
@@ -480,7 +469,6 @@ function Image(
           style={{ width: 'inherit', height: 'inherit' }}
         >
           <div
-            ref={imageContainerRef}
             style={{
               width: 'inherit',
               height: 'inherit',
