@@ -3,11 +3,13 @@ import { useParams } from 'react-router-dom'
 
 import { updateImageData } from 'api'
 import { DefinedPosition, Dimensions, ImageData } from 'types/imageData.ts'
+import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
-
-import calculateScaleFactor from '../../utils/calculateScaleFactor.ts'
+import distanceFromPointToLine from 'utils/distanceFromPointToLine.ts'
+import rotatePoint from 'utils/rotatePoint.ts'
 
 import ResizeHelper from './ResizeHelper.tsx'
+import RotateTool from './RotateTool.tsx'
 
 const MAX_SCALE = 10
 const MIN_BORDER_WIDTH = 50
@@ -25,6 +27,8 @@ interface ImageProps extends ImageData {
 function Image(
   {
     src,
+    x,
+    y,
     originalWidth,
     originalHeight,
     xOffset,
@@ -49,6 +53,7 @@ function Image(
   const borderRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
   const imageContainerRef = useRef<HTMLDivElement>(null)
+  const imageInBorderRef = useRef<HTMLDivElement>(null)
 
   const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from start corner (Top Left)
   const isDragging = useRef(false)
@@ -73,13 +78,15 @@ function Image(
   const borderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
   const hotBorderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
 
+  const rect = imageRef.current?.getBoundingClientRect()
+
   const { wallId } = useParams() as {
     wallId: string
   }
 
   function changeImagePosition({ x, y }: DefinedPosition, isFinished = true) {
     imageRef.current!.style.transform = `translate(${x}px, ${y}px)`
-    imageContainerRef.current!.style.backgroundPosition = `${x}px ${y}px`
+    imageInBorderRef.current!.style.transform = `translate(${x}px, ${y}px)`
     if (isFinished) {
       imageOffset.current = { x, y }
     }
@@ -89,11 +96,13 @@ function Image(
   function changeImageSize({ width, height }: Dimensions, isFinished = true) {
     imageRef.current!.style.width = `${width}px`
     imageRef.current!.style.height = `${height}px`
-    imageContainerRef.current!.style.backgroundSize = `${width}px ${height}px`
+    imageInBorderRef.current!.style.width = `${width}px`
+    imageInBorderRef.current!.style.height = `${height}px`
     if (isFinished) {
       imageDimensions.current = { width, height }
     }
     hotImageDimensions.current = { width, height }
+    currentScale.current = width / originalWidth
   }
 
   function changeBorderPosition({ x, y }: DefinedPosition, isFinished = true) {
@@ -114,6 +123,12 @@ function Image(
     hotBorderDimensions.current = { width, height }
   }
 
+  function changeImageRotation(angle: number) {
+    imageRef.current!.style.rotate = `${angle}rad`
+    imageInBorderRef.current!.style.rotate = `${angle}rad`
+    currentRotation.current = angle
+  }
+
   useEffect(() => {
     setIsEditingMode(false)
   }, [isSelected])
@@ -126,7 +141,7 @@ function Image(
 
   useEffect(() => {
     if (imageRef.current && imageContainerRef.current) {
-      imageRef.current!.style.rotate = `${rotation * 90}deg`
+      changeImageRotation(rotation)
       changeImagePosition({ x: xOffset || 0, y: yOffset || 0 })
     }
   }, [xOffset, yOffset, rotation])
@@ -318,21 +333,128 @@ function Image(
     })
   }
 
-  function changeRotation(rotationDirection: number) {
-    currentRotation.current = (4 + currentRotation.current + rotationDirection) % 4
-    imageRef.current!.style.rotate = `${currentRotation.current * 90}deg`
-    // adjustImagePosition()
-    updateImageData(id, wallId, { rotation: currentRotation.current })
+  function handleRotating(angle: number) {
+    currentRotation.current = angle
+    changeImageRotation(angle)
+
+    const A = { x: hotImageOffset.current.x, y: hotImageOffset.current.y }
+    const B = {
+      x: hotImageDimensions.current.width + hotImageOffset.current.x,
+      y: hotImageOffset.current.y,
+    }
+    const C = {
+      x: hotImageDimensions.current.width + hotImageOffset.current.x,
+      y: hotImageDimensions.current.height + hotImageOffset.current.y,
+    }
+    const D = {
+      x: hotImageOffset.current.x,
+      y: hotImageDimensions.current.height + hotImageOffset.current.y,
+    }
+
+    const center = {
+      x: hotImageDimensions.current.width / 2,
+      y: hotImageDimensions.current.height / 2,
+    }
+
+    const A1 = rotatePoint(center, A, angle)
+    const B1 = rotatePoint(center, B, angle)
+    const C1 = rotatePoint(center, C, angle)
+    const D1 = rotatePoint(center, D, angle)
+
+    const a = {
+      x: 0,
+      y: 0,
+    }
+    const b = {
+      x: borderDimensions.current.width,
+      y: 0,
+    }
+    const c = {
+      x: borderDimensions.current.width,
+      y: borderDimensions.current.height,
+    }
+    const d = {
+      x: 0,
+      y: borderDimensions.current.height,
+    }
+
+    const corners = [a, b, c, d]
+    corners.forEach((corner) => {
+      const da = distanceFromPointToLine(D1, A1, corner)
+      if (da < 0) {
+        changeImagePosition(
+          { x: hotImageOffset.current.x + da, y: hotImageOffset.current.y },
+          false,
+        )
+        const ratio = originalWidth / originalHeight
+        changeImageSize(
+          {
+            width: hotImageDimensions.current.width + Math.abs(da),
+            height: (hotImageDimensions.current.width + Math.abs(da)) / ratio,
+          },
+          false,
+        )
+      }
+
+      const ab = distanceFromPointToLine(A1, B1, corner)
+      if (ab < 0) {
+        changeImagePosition(
+          { x: hotImageOffset.current.x, y: hotImageOffset.current.y + ab },
+          false,
+        )
+        const ratio = originalWidth / originalHeight
+        changeImageSize(
+          {
+            width: (hotImageDimensions.current.height + Math.abs(ab)) * ratio,
+            height: hotImageDimensions.current.height + Math.abs(ab),
+          },
+          false,
+        )
+      }
+
+      const bc = distanceFromPointToLine(B1, C1, corner)
+      if (bc < 0) {
+        changeImagePosition(
+          { x: hotImageOffset.current.x - bc, y: hotImageOffset.current.y },
+          false,
+        )
+        const ratio = originalWidth / originalHeight
+        changeImageSize(
+          {
+            width: hotImageDimensions.current.width + Math.abs(bc),
+            height: (hotImageDimensions.current.width + Math.abs(bc)) / ratio,
+          },
+          false,
+        )
+      }
+
+      const cd = distanceFromPointToLine(C1, D1, corner)
+      if (cd < 0) {
+        changeImagePosition(
+          { x: hotImageOffset.current.x, y: hotImageOffset.current.y - cd },
+          false,
+        )
+        const ratio = originalWidth / originalHeight
+        changeImageSize(
+          {
+            width: (hotImageDimensions.current.height + Math.abs(cd)) * ratio,
+            height: hotImageDimensions.current.height + Math.abs(cd),
+          },
+          false,
+        )
+      }
+    })
   }
 
-  function handleRotateClockwise(event: MouseEvent<HTMLDivElement>) {
-    changeRotation(1)
-    event.stopPropagation()
-  }
-
-  function handleRotateCounterClockwise(event: MouseEvent<HTMLDivElement>) {
-    changeRotation(-1)
-    event.stopPropagation()
+  function handleRotatingFinished() {
+    imageDimensions.current = hotImageDimensions.current
+    imageOffset.current = hotImageOffset.current
+    updateImageData(id, wallId, {
+      xOffset: imageOffset.current.x,
+      yOffset: imageOffset.current.y,
+      scale: currentScale.current,
+      rotation: currentRotation.current,
+    })
   }
 
   return (
@@ -360,16 +482,32 @@ function Image(
           <div
             ref={imageContainerRef}
             style={{
-              background: `url(${src}`,
-              backgroundSize: `${originalWidth * scale}px ${originalHeight * scale}px`,
               width: 'inherit',
               height: 'inherit',
             }}
           >
             <div
+              style={{
+                width: 'inherit',
+                height: 'inherit',
+                overflow: 'hidden',
+                position: 'absolute',
+              }}
+            >
+              <div
+                ref={imageInBorderRef}
+                style={{
+                  position: 'relative',
+                  background: `url(${src}`,
+                  backgroundSize: `contain`,
+                  width: 'inherit',
+                  height: 'inherit',
+                }}
+              ></div>
+            </div>
+            <div
               className={`relative w-fit h-fit`}
               style={{
-                transformOrigin: `${borderWidth / 2}px ${borderHeight / 2}px`,
                 background: `url(${src}`,
                 backgroundSize: 'contain',
                 opacity: '50%',
@@ -386,18 +524,20 @@ function Image(
                   variant='image'
                 />
               )}
+              {isEditingMode && (
+                <RotateTool
+                  onRotating={handleRotating}
+                  onRotatingFinished={handleRotatingFinished}
+                  center={{
+                    x: rect.x! + rect.width / 2,
+                    y: rect.y! + rect.height / 2,
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
       </div>
-      {/* {isSelected && ( */}
-      {/*   <div className='text-pink-600 text-2xl z-[9999]'> */}
-      {/*     <div onMouseDown={onDeleteImage}>x</div> */}
-      {/*     <div onMouseDown={onRemoveFromWall}>!</div> */}
-      {/*     <div onMouseDown={handleRotateClockwise}>{'->'}</div> */}
-      {/*     <div onMouseDown={handleRotateCounterClockwise}>{'<-'}</div> */}
-      {/*   </div> */}
-      {/* )} */}
     </div>
   )
 }
