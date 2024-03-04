@@ -3,10 +3,10 @@ import { useParams } from 'react-router-dom'
 
 import { updateImageData } from 'api'
 import { DefinedPosition, Dimensions, ImageData } from 'types/imageData.ts'
+import calcCornersCoords from 'utils/calcCornersCoords.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
 import distanceFromPointToLine from 'utils/distanceFromPointToLine.ts'
-import rotatePoint from 'utils/rotatePoint.ts'
 
 import ResizeHelper from './ResizeHelper.tsx'
 import RotateTool from './RotateTool.tsx'
@@ -331,34 +331,6 @@ function Image(
       borderOffsetY: borderOffset.current.y,
       scale: currentScale.current,
     })
-  }
-
-  function calcCornersCoords(dimensions: Dimensions, position: DefinedPosition, angle = 0) {
-    const A = { x: position.x, y: position.y }
-    const B = {
-      x: dimensions.width + position.x,
-      y: position.y,
-    }
-    const C = {
-      x: dimensions.width + position.x,
-      y: dimensions.height + position.y,
-    }
-    const D = {
-      x: position.x,
-      y: dimensions.height + position.y,
-    }
-
-    const center = {
-      x: dimensions.width / 2,
-      y: dimensions.height / 2,
-    }
-
-    return {
-      A: rotatePoint(center, A, angle),
-      B: rotatePoint(center, B, angle),
-      C: rotatePoint(center, C, angle),
-      D: rotatePoint(center, D, angle),
-    }
   }
 
   function handleRotating(angle: number) {
