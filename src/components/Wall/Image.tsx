@@ -7,6 +7,7 @@ import calcCornersCoords from 'utils/calcCornersCoords.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
 import distanceFromPointToLine from 'utils/distanceFromPointToLine.ts'
+import negativeOrZero from 'utils/negativeOrZero.ts'
 
 import ResizeHelper from './ResizeHelper.tsx'
 import RotateTool from './RotateTool.tsx'
@@ -16,6 +17,18 @@ const MIN_BORDER_WIDTH = 50
 const MAX_BORDER_WIDTH = 1000
 const MIN_BORDER_HEIGHT = 50
 const MAX_BORDER_HEIGHT = 1000
+
+const EDGES: Array<{
+  from: 'A' | 'B' | 'C' | 'D'
+  to: 'A' | 'B' | 'C' | 'D'
+  xOffsetMultiplier: number
+  yOffsetMultiplier: number
+}> = [
+  { from: 'D', to: 'A', xOffsetMultiplier: 1, yOffsetMultiplier: 0 },
+  { from: 'A', to: 'B', xOffsetMultiplier: 0, yOffsetMultiplier: 1 },
+  { from: 'B', to: 'C', xOffsetMultiplier: -1, yOffsetMultiplier: 0 },
+  { from: 'C', to: 'D', xOffsetMultiplier: 0, yOffsetMultiplier: -1 },
+]
 
 interface ImageProps extends ImageData {
   isSelected: boolean
@@ -159,18 +172,33 @@ function Image(
   }, [borderOffsetX, borderOffsetY])
 
   function adjustImagePosition(newOffsetX = 0, newOffsetY = 0, isFinished: boolean) {
-    const imageWidth = isFinished ? imageDimensions.current.width : hotImageDimensions.current.width
-    const imageHeight = isFinished
-      ? imageDimensions.current.height
-      : hotImageDimensions.current.height
-    const direction = -1 // currentRotation.current < 2 ? -1 : 1
-    const directionX = -1 //[1, 2].includes(currentRotation.current) ? 1 : -1
-    const maxXOffset = directionX * (imageWidth - borderDimensions.current.width)
-    const maxYOffset = direction * (imageHeight - borderDimensions.current.height)
+    const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
+    const corners = [a, b, c, d]
+
+    let maxOffsetX = newOffsetX
+    let maxOffsetY = newOffsetY
+
+    corners.forEach((corner) => {
+      EDGES.forEach((edge) => {
+        const corners = calcCornersCoords(
+          hotImageDimensions.current,
+          { x: maxOffsetX, y: maxOffsetY },
+          currentRotation.current,
+        )
+        const distance = negativeOrZero(
+          distanceFromPointToLine(corners[edge.from], corners[edge.to], corner),
+        )
+
+        if (distance) {
+          maxOffsetX = maxOffsetX + distance * edge.xOffsetMultiplier
+          maxOffsetY = maxOffsetY + distance * edge.yOffsetMultiplier
+        }
+      })
+    })
     changeImagePosition(
       {
-        x: clamp(Math.min(maxXOffset, 0), Math.max(maxXOffset, 0), newOffsetX),
-        y: clamp(Math.min(maxYOffset, 0), Math.max(maxYOffset, 0), newOffsetY),
+        x: maxOffsetX,
+        y: maxOffsetY,
       },
       isFinished,
     )
