@@ -13,7 +13,7 @@ import rotateVector from 'utils/rotateVector.ts'
 import ResizeHelper from './ResizeHelper.tsx'
 import RotateTool from './RotateTool.tsx'
 
-const MAX_SCALE = 10
+const MAX_SCALE = 5
 const MIN_BORDER_WIDTH = 50
 const MAX_BORDER_WIDTH = 1000
 const MIN_BORDER_HEIGHT = 50
@@ -279,32 +279,40 @@ function Image(
     const newYoffset =
       imageOffset.current.y + (imageDimensions.current.height - actualHeight) * signY
 
-    const adjustedWidth = Math.max(-newXoffset + borderDimensions.current.width, actualWidth)
-    const adjustedHeight = Math.max(-newYoffset + borderDimensions.current.height, actualHeight)
+    const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
+    const corners = [a, b, c, d]
+    let wasAdjusted = false
 
-    const adjustedXoffset = Math.min(0, newXoffset)
-    const adjustedYoffset = Math.min(0, newYoffset)
+    corners.forEach((corner) => {
+      EDGES.forEach((edge) => {
+        const corners = calcCornersCoords(
+          { width: actualWidth, height: actualHeight },
+          { x: newXoffset, y: newYoffset },
+          currentRotation.current,
+        )
+        const distance = negativeOrZero(
+          distanceFromPointToLine(corners[edge.from], corners[edge.to], corner),
+        )
 
-    const wasAdjusted = !(
-      adjustedWidth === actualWidth &&
-      adjustedHeight === actualHeight &&
-      adjustedXoffset === newXoffset &&
-      adjustedYoffset === newYoffset
-    )
+        if (distance) {
+          wasAdjusted = true
+        }
+      })
+    })
 
     if (!wasAdjusted) {
       changeImageSize(
         {
-          width: adjustedWidth,
-          height: adjustedHeight,
+          width: actualWidth,
+          height: actualHeight,
         },
         false,
       )
 
       changeImagePosition(
         {
-          x: adjustedXoffset,
-          y: adjustedYoffset,
+          x: newXoffset,
+          y: newYoffset,
         },
         false,
       )
