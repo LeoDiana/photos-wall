@@ -2,8 +2,7 @@ import { MouseEvent, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { DefinedPosition } from 'types/imageData.ts'
-
-import { findRotationAngle } from '../../utils/findRotationAngle.ts'
+import { findRotationAngle } from 'utils/findRotationAngle.ts'
 
 interface RotateToolProps {
   center: DefinedPosition
@@ -13,7 +12,6 @@ interface RotateToolProps {
 
 function RotateTool({ center, onRotating, onRotatingFinished }: RotateToolProps) {
   const [isRotating, setIsRotating] = useState(false)
-  const rotation = useRef()
   const startCoords = useRef({ x: 0, y: 0 })
 
   function handleMouseDown(event: MouseEvent<HTMLDivElement>) {
@@ -23,33 +21,12 @@ function RotateTool({ center, onRotating, onRotatingFinished }: RotateToolProps)
   }
 
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
-    console.log('ceter', center)
     const angle = findRotationAngle(center, startCoords.current, {
       x: event.clientX,
       y: event.clientY,
     })
 
-    // console.log(angle, angle * (180 / Math.PI), center, event.clientX, event.clientY)
     onRotating(angle)
-
-    // const difX = event.clientX - offset.current.x
-    // const difY = event.clientY - offset.current.y
-    // const nwCornerDif = { x: 0, y: 0 }
-    // const seCornerDif = { x: 0, y: 0 }
-
-    // if (movingSides.current.includes('n')) {
-    //   nwCornerDif.y = -difY
-    // }
-    // if (movingSides.current.includes('e')) {
-    //   seCornerDif.x = difX
-    // }
-    // if (movingSides.current.includes('s')) {
-    //   seCornerDif.y = difY
-    // }
-    // if (movingSides.current.includes('w')) {
-    //   nwCornerDif.x = -difX
-    // }
-    // onScaling({ nwCornerDif, seCornerDif, difX, difY })
   }
 
   function handleMouseUp() {

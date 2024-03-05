@@ -71,6 +71,7 @@ function Image(
   const isDragging = useRef(false)
   const currentScale = useRef(scale)
   const currentRotation = useRef(rotation)
+  const hotCurrentRotation = useRef(rotation)
 
   const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // saved
   const hotImageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // in progress
@@ -136,10 +137,13 @@ function Image(
     hotBorderDimensions.current = { width, height }
   }
 
-  function changeImageRotation(angle: number) {
+  function changeImageRotation(angle: number, isFinished = true) {
     imageRef.current!.style.rotate = `${angle}rad`
     imageInBorderRef.current!.style.rotate = `${angle}rad`
-    currentRotation.current = angle
+    if (isFinished) {
+      currentRotation.current = angle
+    }
+    hotCurrentRotation.current = angle
   }
 
   useEffect(() => {
@@ -361,8 +365,9 @@ function Image(
     })
   }
 
-  function handleRotating(angle: number) {
-    changeImageRotation(angle)
+  function handleRotating(diffAngle: number) {
+    const angle = currentRotation.current + diffAngle
+    changeImageRotation(angle, false)
 
     const { A, B, C, D } = calcCornersCoords(
       hotImageDimensions.current,
@@ -438,6 +443,7 @@ function Image(
   function handleRotatingFinished() {
     imageDimensions.current = hotImageDimensions.current
     imageOffset.current = hotImageOffset.current
+    currentRotation.current = hotCurrentRotation.current
     updateImageData(id, wallId, {
       xOffset: imageOffset.current.x,
       yOffset: imageOffset.current.y,
