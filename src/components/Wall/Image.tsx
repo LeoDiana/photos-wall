@@ -8,6 +8,7 @@ import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
 import distanceFromPointToLine from 'utils/distanceFromPointToLine.ts'
 import negativeOrZero from 'utils/negativeOrZero.ts'
+import rotateVector from 'utils/rotateVector.ts'
 
 import ResizeHelper from './ResizeHelper.tsx'
 import RotateTool from './RotateTool.tsx'
@@ -40,8 +41,6 @@ interface ImageProps extends ImageData {
 function Image(
   {
     src,
-    x,
-    y,
     originalWidth,
     originalHeight,
     xOffset,
@@ -179,8 +178,12 @@ function Image(
     const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
     const corners = [a, b, c, d]
 
-    let maxOffsetX = newOffsetX
-    let maxOffsetY = newOffsetY
+    const { x: _x, y: _y } = rotateVector(
+      { x: newOffsetX, y: newOffsetY },
+      -currentRotation.current,
+    )
+    let maxOffsetX = imageOffset.current.x + _x
+    let maxOffsetY = imageOffset.current.y + _y
 
     corners.forEach((corner) => {
       EDGES.forEach((edge) => {
@@ -212,8 +215,8 @@ function Image(
     if (isEditingMode) {
       isDragging.current = true
       mouseOffset.current = {
-        x: event.clientX - imageOffset.current.x,
-        y: event.clientY - imageOffset.current.y,
+        x: event.clientX, //- imageOffset.current.x,
+        y: event.clientY, //- imageOffset.current.y,
       }
       event.stopPropagation()
     }
@@ -221,11 +224,11 @@ function Image(
 
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
     if (isDragging.current) {
-      hotImageOffset.current = {
-        x: event.clientX - mouseOffset.current.x,
-        y: event.clientY - mouseOffset.current.y,
-      }
-      adjustImagePosition(hotImageOffset.current.x, hotImageOffset.current.y, false)
+      adjustImagePosition(
+        event.clientX - mouseOffset.current.x,
+        event.clientY - mouseOffset.current.y,
+        false,
+      )
     }
   }
 
@@ -369,74 +372,47 @@ function Image(
     const angle = currentRotation.current + diffAngle
     changeImageRotation(angle, false)
 
-    const { A, B, C, D } = calcCornersCoords(
-      hotImageDimensions.current,
-      hotImageOffset.current,
-      angle,
-    )
     const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
-
     const corners = [a, b, c, d]
+
     corners.forEach((corner) => {
-      const da = distanceFromPointToLine(D, A, corner)
-      if (da < 0) {
-        changeImagePosition(
-          { x: hotImageOffset.current.x + da, y: hotImageOffset.current.y },
-          false,
+      EDGES.forEach((edge) => {
+        const corners = calcCornersCoords(
+          hotImageDimensions.current,
+          hotImageOffset.current,
+          hotCurrentRotation.current,
         )
-        changeImageSize(
-          {
-            width: hotImageDimensions.current.width + Math.abs(da),
-            height: (hotImageDimensions.current.width + Math.abs(da)) / ratio,
-          },
-          false,
+        const distance = negativeOrZero(
+          distanceFromPointToLine(corners[edge.from], corners[edge.to], corner),
         )
-      }
 
-      const ab = distanceFromPointToLine(A, B, corner)
-      if (ab < 0) {
-        changeImagePosition(
-          { x: hotImageOffset.current.x, y: hotImageOffset.current.y + ab },
-          false,
-        )
-        changeImageSize(
-          {
-            width: (hotImageDimensions.current.height + Math.abs(ab)) * ratio,
-            height: hotImageDimensions.current.height + Math.abs(ab),
-          },
-          false,
-        )
-      }
-
-      const bc = distanceFromPointToLine(B, C, corner)
-      if (bc < 0) {
-        changeImagePosition(
-          { x: hotImageOffset.current.x - bc, y: hotImageOffset.current.y },
-          false,
-        )
-        changeImageSize(
-          {
-            width: hotImageDimensions.current.width + Math.abs(bc),
-            height: (hotImageDimensions.current.width + Math.abs(bc)) / ratio,
-          },
-          false,
-        )
-      }
-
-      const cd = distanceFromPointToLine(C, D, corner)
-      if (cd < 0) {
-        changeImagePosition(
-          { x: hotImageOffset.current.x, y: hotImageOffset.current.y - cd },
-          false,
-        )
-        changeImageSize(
-          {
-            width: (hotImageDimensions.current.height + Math.abs(cd)) * ratio,
-            height: hotImageDimensions.current.height + Math.abs(cd),
-          },
-          false,
-        )
-      }
+        if (distance) {
+          changeImagePosition(
+            {
+              x: hotImageOffset.current.x + distance * edge.xOffsetMultiplier,
+              y: hotImageOffset.current.y + distance * edge.yOffsetMultiplier,
+            },
+            false,
+          )
+          if (edge.xOffsetMultiplier !== 0) {
+            changeImageSize(
+              {
+                width: hotImageDimensions.current.width + Math.abs(distance),
+                height: (hotImageDimensions.current.width + Math.abs(distance)) / ratio,
+              },
+              false,
+            )
+          } else {
+            changeImageSize(
+              {
+                width: (hotImageDimensions.current.height + Math.abs(distance)) * ratio,
+                height: hotImageDimensions.current.height + Math.abs(distance),
+              },
+              false,
+            )
+          }
+        }
+      })
     })
   }
 
