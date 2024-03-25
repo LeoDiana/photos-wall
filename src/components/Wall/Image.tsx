@@ -435,8 +435,21 @@ function Image(
         }
       })
     })
-    const newW = distanceBetweenPoints(corners.A, corners.B)
-    const newH = distanceBetweenPoints(corners.A, corners.D)
+
+    const suggestedWidth = distanceBetweenPoints(corners.A, corners.B)
+    const suggestedHeight = distanceBetweenPoints(corners.A, corners.D)
+    const w2 = suggestedHeight * ratio
+    const h2 = suggestedWidth / ratio
+    let newW
+    let newH
+    if (suggestedWidth - w2 < 0) {
+      newW = w2
+      newH = suggestedHeight
+    } else {
+      newW = suggestedWidth
+      newH = h2
+    }
+
     const difW = imageDimensions.current.width - newW
     const difH = imageDimensions.current.height - newH
     changeImageSize(
