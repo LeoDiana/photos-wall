@@ -376,52 +376,80 @@ function Image(
     })
   }
 
+  function findPerpendicularPoint(
+    line: {
+      point1: DefinedPosition
+      point2: DefinedPosition
+    },
+    point: DefinedPosition,
+  ): DefinedPosition {
+    const slope = (line.point2.y - line.point1.y) / (line.point2.x - line.point1.x)
+
+    if (slope === 0) {
+      return { x: point.x, y: line.point1.y }
+    }
+
+    const perpendicularSlope = -1 / slope
+    const perpendicularIntercept = point.y - perpendicularSlope * point.x
+
+    const x =
+      (perpendicularIntercept - line.point1.y + slope * line.point1.x) /
+      (slope - perpendicularSlope)
+    const y = slope * (x - line.point1.x) + line.point1.y
+
+    return { x, y }
+  }
+
+  function distanceBetweenPoints(p1: DefinedPosition, p2: DefinedPosition): number {
+    return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
+  }
+
   function handleRotating(diffAngle: number) {
     const angle = currentRotation.current + diffAngle
     changeImageRotation(angle, false)
 
     const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
-    const corners = [a, b, c, d]
+    const bcorners = [a, b, c, d]
 
-    corners.forEach((corner) => {
+    const corners = calcCornersCoords(
+      imageDimensions.current,
+      imageOffset.current,
+      hotCurrentRotation.current,
+    )
+    bcorners.forEach((corner) => {
       EDGES.forEach((edge) => {
-        const corners = calcCornersCoords(
-          hotImageDimensions.current,
-          hotImageOffset.current,
-          hotCurrentRotation.current,
-        )
         const distance = negativeOrZero(
           distanceFromPointToLine(corners[edge.from], corners[edge.to], corner),
         )
 
         if (distance) {
-          changeImagePosition(
-            {
-              x: hotImageOffset.current.x + distance * edge.xOffsetMultiplier,
-              y: hotImageOffset.current.y + distance * edge.yOffsetMultiplier,
-            },
-            false,
+          const p = findPerpendicularPoint(
+            { point1: corners[edge.from], point2: corners[edge.to] },
+            corner,
           )
-          if (edge.xOffsetMultiplier !== 0) {
-            changeImageSize(
-              {
-                width: hotImageDimensions.current.width + Math.abs(distance),
-                height: (hotImageDimensions.current.width + Math.abs(distance)) / ratio,
-              },
-              false,
-            )
-          } else {
-            changeImageSize(
-              {
-                width: (hotImageDimensions.current.height + Math.abs(distance)) * ratio,
-                height: hotImageDimensions.current.height + Math.abs(distance),
-              },
-              false,
-            )
-          }
+
+          const v = { x: corner.x - p.x, y: corner.y - p.y }
+
+          corners[edge.from] = { x: corners[edge.from].x + v.x, y: corners[edge.from].y + v.y }
+          corners[edge.to] = { x: corners[edge.to].x + v.x, y: corners[edge.to].y + v.y }
         }
       })
     })
+    const newW = distanceBetweenPoints(corners.A, corners.B)
+    const newH = distanceBetweenPoints(corners.A, corners.D)
+    const difW = imageDimensions.current.width - newW
+    const difH = imageDimensions.current.height - newH
+    changeImageSize(
+      {
+        width: newW,
+        height: newH,
+      },
+      false,
+    )
+    changeImagePosition(
+      { x: imageOffset.current.x + difW / 2, y: imageOffset.current.y + difH / 2 },
+      false,
+    )
   }
 
   function handleRotatingFinished() {
@@ -438,6 +466,9 @@ function Image(
 
   return (
     <div className={`absolute select-none flex`} ref={ref}>
+      <div className='absolute z-[999999] text-sky-600' onClick={() => handleRotating(1.5708 / 2)}>
+        ()
+      </div>
       <div
         className={`w-[${borderWidth}px] h-[${borderHeight}px] box-content cursor-move`}
         style={{
@@ -455,7 +486,7 @@ function Image(
           variant='border'
         />
         <div
-          className={`${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
+          className={`${isEditingMode ? 'overflow-visible' : 'overflow-visible'}`}
           style={{ width: 'inherit', height: 'inherit' }}
         >
           <div
@@ -480,6 +511,7 @@ function Image(
                   backgroundSize: `contain`,
                   width: 'inherit',
                   height: 'inherit',
+                  transformOrigin: `${borderDimensions.current.width / 2}px ${borderDimensions.current.height / 2}px`,
                 }}
               ></div>
             </div>
@@ -489,6 +521,7 @@ function Image(
                 background: `url(${src}`,
                 backgroundSize: 'contain',
                 opacity: '50%',
+                transformOrigin: `${borderDimensions.current.width / 2}px ${borderDimensions.current.height / 2}px`,
               }}
               ref={imageRef}
               onMouseDown={handleMouseDown}

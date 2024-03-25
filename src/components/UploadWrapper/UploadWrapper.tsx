@@ -13,7 +13,7 @@ function UploadWrapper({ children, onChange, multiple = false }: UploadContainer
     <>
       <input
         type='file'
-        accept='.jpg,.jpeg'
+        accept='.jpg,.jpeg,.png'
         multiple={multiple}
         className='hidden'
         id={id}
