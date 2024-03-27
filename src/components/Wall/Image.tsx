@@ -450,8 +450,6 @@ function Image(
       newH = h2
     }
 
-    const difW = imageDimensions.current.width - newW
-    const difH = imageDimensions.current.height - newH
     changeImageSize(
       {
         width: newW,
@@ -459,10 +457,22 @@ function Image(
       },
       false,
     )
-    changeImagePosition(
-      { x: imageOffset.current.x + difW / 2, y: imageOffset.current.y + difH / 2 },
-      false,
-    )
+
+    changeImagePosition(imageOffset.current, false)
+    bcorners.forEach((corner) => {
+      const corners = calcCornersCoords(
+        hotImageDimensions.current,
+        hotImageOffset.current,
+        hotCurrentRotation.current,
+      )
+      const distanceY = negativeOrZero(distanceFromPointToLine(corners.A, corners.B, corner))
+      const distanceX = negativeOrZero(distanceFromPointToLine(corners.D, corners.A, corner))
+
+      changeImagePosition(
+        { x: hotImageOffset.current.x + distanceX, y: hotImageOffset.current.y + distanceY },
+        false,
+      )
+    })
   }
 
   function handleRotatingFinished() {
@@ -479,9 +489,6 @@ function Image(
 
   return (
     <div className={`absolute select-none flex`} ref={ref}>
-      <div className='absolute z-[999999] text-sky-600' onClick={() => handleRotating(1.5708 / 2)}>
-        ()
-      </div>
       <div
         className={`w-[${borderWidth}px] h-[${borderHeight}px] box-content cursor-move`}
         style={{

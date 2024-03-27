@@ -18,8 +18,8 @@ function calcCornersCoords(dimensions: Dimensions, position: DefinedPosition, an
   }
 
   const center = {
-    x: dimensions.width / 2,
-    y: dimensions.height / 2,
+    x: 125,
+    y: 125,
   }
 
   return {
