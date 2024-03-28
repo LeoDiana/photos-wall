@@ -239,14 +239,31 @@ function Image(
   }
 
   function handleScaling({
-    nwCornerDif,
-    seCornerDif,
+    nwCornerDif: nw,
+    seCornerDif: se,
+    vector,
+    difX,
+    difY,
   }: {
     difX: number
     difY: number
     nwCornerDif: DefinedPosition
     seCornerDif: DefinedPosition
+    vector: DefinedPosition
   }) {
+    const { x: dx, y: dy } = rotateVector({ x: difX, y: difY }, 0)
+    const rotatedVector = rotateVector(vector, -currentRotation.current)
+    const isUpscaling =
+      Math.sign(dx) === Math.sign(rotatedVector.x) && Math.sign(dy) === Math.sign(rotatedVector.y)
+    const dir = isUpscaling ? 1 : -1
+    const nwCornerDif = rotateVector(nw, -currentRotation.current)
+    const seCornerDif = rotateVector(se, -currentRotation.current)
+
+    nwCornerDif.x = dir * Math.abs(nwCornerDif.x)
+    nwCornerDif.y = dir * Math.abs(nwCornerDif.y)
+    seCornerDif.x = dir * Math.abs(seCornerDif.x)
+    seCornerDif.y = dir * Math.abs(seCornerDif.y)
+
     const suggestedWidth = imageDimensions.current.width + nwCornerDif.x + seCornerDif.x
     const suggestedHeight = imageDimensions.current.height + nwCornerDif.y + seCornerDif.y
 
@@ -272,8 +289,8 @@ function Image(
     const actualWidth = originalWidth * scaleFactor
     const actualHeight = originalHeight * scaleFactor
 
-    const signX = nwCornerDif.x ? 1 : 0
-    const signY = nwCornerDif.y ? 1 : 0
+    const signX = nw.x ? 1 : 0
+    const signY = nw.y ? 1 : 0
 
     const newXoffset = imageOffset.current.x + (imageDimensions.current.width - actualWidth) * signX
     const newYoffset =

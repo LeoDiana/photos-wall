@@ -12,6 +12,7 @@ interface ResizeHelperProps {
   onScaling: (props: {
     nwCornerDif: DefinedPosition
     seCornerDif: DefinedPosition
+    vector: DefinedPosition
     difX: number
     difY: number
   }) => void
@@ -41,20 +42,25 @@ function ResizeHelper({ onScaling, onScalingFinished, variant }: ResizeHelperPro
     const difY = event.clientY - offset.current.y
     const nwCornerDif = { x: 0, y: 0 }
     const seCornerDif = { x: 0, y: 0 }
+    const vector = { x: 0, y: 0 }
 
     if (movingSides.current.includes('n')) {
       nwCornerDif.y = -difY
+      vector.y = 1
     }
     if (movingSides.current.includes('e')) {
       seCornerDif.x = difX
+      vector.x = 1
     }
     if (movingSides.current.includes('s')) {
       seCornerDif.y = difY
+      vector.y = -1
     }
     if (movingSides.current.includes('w')) {
       nwCornerDif.x = -difX
+      vector.x = -1
     }
-    onScaling({ nwCornerDif, seCornerDif, difX, difY })
+    onScaling({ nwCornerDif, seCornerDif, difX, difY: -difY, vector })
   }
 
   function handleMouseUpResize() {
