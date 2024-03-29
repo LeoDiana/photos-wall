@@ -1,8 +1,9 @@
+import { MAX_BORDER_HEIGHT, MAX_BORDER_WIDTH, MIN_BORDER_HEIGHT, MIN_BORDER_WIDTH } from 'constants'
 import { ForwardedRef, forwardRef, MouseEvent, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { updateImageData } from 'api'
-import { DefinedPosition, Dimensions, ImageData } from 'types/imageData.ts'
+import { DefinedPosition, Dimensions, ImageData, Sides } from 'types/imageData.ts'
 import calcCornersCoords from 'utils/calcCornersCoords.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
@@ -10,14 +11,9 @@ import distanceFromPointToLine from 'utils/distanceFromPointToLine.ts'
 import negativeOrZero from 'utils/negativeOrZero.ts'
 import rotateVector from 'utils/rotateVector.ts'
 
+import { calcRescaledDimensions, getCornersDif, getScalingVector } from './rescaleUtils.ts'
 import ResizeHelper from './ResizeHelper.tsx'
 import RotateTool from './RotateTool.tsx'
-
-const MAX_SCALE = 5
-const MIN_BORDER_WIDTH = 50
-const MAX_BORDER_WIDTH = 1000
-const MIN_BORDER_HEIGHT = 50
-const MAX_BORDER_HEIGHT = 1000
 
 const EDGES: Array<{
   from: 'A' | 'B' | 'C' | 'D'
@@ -239,105 +235,33 @@ function Image(
   }
 
   function handleScaling({
-    nwCornerDif: nw,
-    seCornerDif: se,
-    vector,
     difX,
     difY,
     movingSides,
   }: {
     difX: number
     difY: number
-    nwCornerDif: DefinedPosition
-    seCornerDif: DefinedPosition
-    vector: DefinedPosition
-    movingSides: any
+    movingSides: Sides[]
   }) {
-    const { x: dx, y: dy } = rotateVector({ x: difX, y: difY }, 0)
-    const rotatedVector = rotateVector(vector, -currentRotation.current)
-    const isUpscaling =
-      Math.sign(dx) === Math.sign(rotatedVector.x) && Math.sign(dy) === Math.sign(rotatedVector.y)
-    const dir = 1 //isUpscaling ? 1 : -1
-    // const nwCornerDif = rotateVector(nw, -currentRotation.current)
-    // const seCornerDif = rotateVector(se, -currentRotation.current)
-
-    const { x: ddx, y: ddy } = rotateVector({ x: difX, y: difY }, -currentRotation.current)
-
-    // console.log(rotatedVector, nwCornerDif, seCornerDif)
-
-    const nwCornerDif = { x: 0, y: 0 }
-    const seCornerDif = { x: 0, y: 0 }
-
-    const _signX = rotatedVector.x >= 0 ? 1 : -1
-    const _signY = rotatedVector.y >= 0 ? 1 : -1
-
-    if (movingSides.current.includes('n')) {
-      nwCornerDif.y = _signY * dy
-    }
-    if (movingSides.current.includes('e')) {
-      seCornerDif.x = _signX * dx
-    }
-    if (movingSides.current.includes('s')) {
-      seCornerDif.y = _signY * dy
-    }
-    if (movingSides.current.includes('w')) {
-      nwCornerDif.x = _signX * dx
-    }
-
-    console.log(dx, dy, ddx, ddy)
-    console.log(Math.sign(rotatedVector.x) * dx, Math.sign(rotatedVector.y) * dy)
-    console.log(nwCornerDif, seCornerDif)
-
-    // nwCornerDif.x = Math.sign(rotatedVector.x) * nwCornerDif.x
-    // nwCornerDif.y = Math.sign(rotatedVector.y) * nwCornerDif.y
-    // seCornerDif.x = Math.sign(rotatedVector.x) * seCornerDif.x
-    // seCornerDif.y = Math.sign(rotatedVector.y) * seCornerDif.y
-
-    // console.log(
-    //   isUpscaling ? 'up' : 'down',
-    //   nwCornerDif,
-    //   seCornerDif,
-    //   '|',
-    //   difX,
-    //   difY,
-    //   '||||',
-    //   ddx,
-    //   ddy,
-    //   ((currentRotation.current * 180) / Math.PI) % 360,
-    //   '=',
-    //   dx,
-    //   dy,
-    // )
-
-    const suggestedWidth = imageDimensions.current.width + nwCornerDif.x + seCornerDif.x
-    const suggestedHeight = imageDimensions.current.height + nwCornerDif.y + seCornerDif.y
-
-    // console.log(suggestedWidth, suggestedHeight, imageDimensions.current)
-
-    const scaleX: number = suggestedWidth / imageDimensions.current.width
-    const scaleY: number = suggestedHeight / imageDimensions.current.height
-    const scale: number = (scaleX + scaleY) / 2 // Math.min(scaleX, scaleY)
-
-    const scaledWidth = imageDimensions.current.width * scale
-    const scaledHeight = imageDimensions.current.height * scale
-
-    const scaleFactor = clamp(
-      calculateScaleFactor(
-        originalWidth,
-        originalHeight,
-        borderDimensions.current.width,
-        borderDimensions.current.height,
-      ),
-      MAX_SCALE,
-      calculateScaleFactor(originalWidth, originalHeight, scaledWidth, scaledHeight),
+    const { width: widthDif, height: heightDif } = getCornersDif(
+      movingSides,
+      getScalingVector(movingSides, -currentRotation.current),
+      difX,
+      difY,
     )
+
+    const {
+      width: actualWidth,
+      height: actualHeight,
+      scaleFactor,
+    } = calcRescaledDimensions(widthDif, heightDif, imageDimensions.current, {
+      width: originalWidth,
+      height: originalHeight,
+    })
     currentScale.current = scaleFactor
 
-    const actualWidth = originalWidth * scaleFactor
-    const actualHeight = originalHeight * scaleFactor
-
-    const signX = nw.x ? 1 : 0
-    const signY = nw.y ? 1 : 0
+    const signX = movingSides.includes(Sides.left) ? 1 : 0
+    const signY = movingSides.includes(Sides.top) ? 1 : 0
 
     const newXoffset = imageOffset.current.x + (imageDimensions.current.width - actualWidth) * signX
     const newYoffset =
@@ -345,7 +269,7 @@ function Image(
 
     const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
     const corners = [a, b, c, d]
-    let wasAdjusted = false
+    let canBeRescaled = true
 
     corners.forEach((corner) => {
       EDGES.forEach((edge) => {
@@ -359,12 +283,12 @@ function Image(
         )
 
         if (distance) {
-          wasAdjusted = true
+          canBeRescaled = false
         }
       })
     })
 
-    if (!wasAdjusted) {
+    if (canBeRescaled) {
       changeImageSize(
         {
           width: actualWidth,

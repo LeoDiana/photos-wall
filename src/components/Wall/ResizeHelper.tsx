@@ -1,7 +1,7 @@
 import { MouseEvent, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import { DefinedPosition } from 'types/imageData.ts'
+import { Sides } from 'types/imageData.ts'
 
 const styles = {
   border: 'bg-purple-400',
@@ -9,13 +9,7 @@ const styles = {
 }
 
 interface ResizeHelperProps {
-  onScaling: (props: {
-    nwCornerDif: DefinedPosition
-    seCornerDif: DefinedPosition
-    vector: DefinedPosition
-    difX: number
-    difY: number
-  }) => void
+  onScaling: (props: { difX: number; difY: number; movingSides: string[] }) => void
   onScalingFinished: () => void
   variant: 'border' | 'image'
 }
@@ -23,9 +17,9 @@ interface ResizeHelperProps {
 function ResizeHelper({ onScaling, onScalingFinished, variant }: ResizeHelperProps) {
   const [isResizing, setIsResizing] = useState(false)
   const offset = useRef({ x: 0, y: 0 })
-  const movingSides = useRef<string[]>([])
+  const movingSides = useRef<Sides[]>([])
 
-  function handleMouseDownResize(sides: string[]) {
+  function handleMouseDownResize(sides: Sides[]) {
     return (event: MouseEvent<HTMLDivElement>) => {
       event.stopPropagation()
       setIsResizing(true)
@@ -40,33 +34,11 @@ function ResizeHelper({ onScaling, onScalingFinished, variant }: ResizeHelperPro
   function handleMouseMoveResize(event: MouseEvent<HTMLDivElement>) {
     const difX = event.clientX - offset.current.x
     const difY = event.clientY - offset.current.y
-    const nwCornerDif = { x: 0, y: 0 }
-    const seCornerDif = { x: 0, y: 0 }
-    const vector = { x: 0, y: 0 }
 
-    if (movingSides.current.includes('n')) {
-      nwCornerDif.y = 1
-      vector.y = 1
-    }
-    if (movingSides.current.includes('e')) {
-      seCornerDif.x = difX
-      vector.x = 1
-    }
-    if (movingSides.current.includes('s')) {
-      seCornerDif.y = difY
-      vector.y = -1
-    }
-    if (movingSides.current.includes('w')) {
-      nwCornerDif.x = 1
-      vector.x = -1
-    }
     onScaling({
-      nwCornerDif: { x: Math.sign(nwCornerDif.x), y: Math.sign(nwCornerDif.y) },
-      seCornerDif,
       difX,
       difY: -difY,
-      vector,
-      movingSides,
+      movingSides: movingSides.current,
     })
   }
 
@@ -79,19 +51,19 @@ function ResizeHelper({ onScaling, onScalingFinished, variant }: ResizeHelperPro
     <>
       <div
         className={`z-[99999] absolute rounded-full top-0 right-0 translate-x-1/2 -translate-y-1/2 w-3 h-3 ${styles[variant]}`}
-        onMouseDown={handleMouseDownResize(['n', 'e'])}
+        onMouseDown={handleMouseDownResize([Sides.top, Sides.right])}
       />
       <div
         className={`z-[99999] absolute rounded-full top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-3 h-3 ${styles[variant]}`}
-        onMouseDown={handleMouseDownResize(['n', 'w'])}
+        onMouseDown={handleMouseDownResize([Sides.top, Sides.left])}
       />
       <div
         className={`z-[99999] absolute rounded-full bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-3 h-3 ${styles[variant]}`}
-        onMouseDown={handleMouseDownResize(['s', 'e'])}
+        onMouseDown={handleMouseDownResize([Sides.bottom, Sides.right])}
       />
       <div
         className={`z-[99999] absolute rounded-full bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-3 h-3 ${styles[variant]}`}
-        onMouseDown={handleMouseDownResize(['s', 'w'])}
+        onMouseDown={handleMouseDownResize([Sides.bottom, Sides.left])}
       />
       {isResizing &&
         createPortal(

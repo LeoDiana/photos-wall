@@ -30,3 +30,10 @@ export interface Position {
   x: number | null
   y: number | null
 }
+
+export enum Sides {
+  top = 'top',
+  right = 'right',
+  bottom = 'bottom',
+  left = 'left',
+}
