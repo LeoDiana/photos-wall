@@ -45,7 +45,7 @@ function ResizeHelper({ onScaling, onScalingFinished, variant }: ResizeHelperPro
     const vector = { x: 0, y: 0 }
 
     if (movingSides.current.includes('n')) {
-      nwCornerDif.y = -difY
+      nwCornerDif.y = 1
       vector.y = 1
     }
     if (movingSides.current.includes('e')) {
@@ -57,10 +57,17 @@ function ResizeHelper({ onScaling, onScalingFinished, variant }: ResizeHelperPro
       vector.y = -1
     }
     if (movingSides.current.includes('w')) {
-      nwCornerDif.x = -difX
+      nwCornerDif.x = 1
       vector.x = -1
     }
-    onScaling({ nwCornerDif, seCornerDif, difX, difY: -difY, vector })
+    onScaling({
+      nwCornerDif: { x: Math.sign(nwCornerDif.x), y: Math.sign(nwCornerDif.y) },
+      seCornerDif,
+      difX,
+      difY: -difY,
+      vector,
+      movingSides,
+    })
   }
 
   function handleMouseUpResize() {

@@ -244,32 +244,79 @@ function Image(
     vector,
     difX,
     difY,
+    movingSides,
   }: {
     difX: number
     difY: number
     nwCornerDif: DefinedPosition
     seCornerDif: DefinedPosition
     vector: DefinedPosition
+    movingSides: any
   }) {
     const { x: dx, y: dy } = rotateVector({ x: difX, y: difY }, 0)
     const rotatedVector = rotateVector(vector, -currentRotation.current)
     const isUpscaling =
       Math.sign(dx) === Math.sign(rotatedVector.x) && Math.sign(dy) === Math.sign(rotatedVector.y)
-    const dir = isUpscaling ? 1 : -1
-    const nwCornerDif = rotateVector(nw, -currentRotation.current)
-    const seCornerDif = rotateVector(se, -currentRotation.current)
+    const dir = 1 //isUpscaling ? 1 : -1
+    // const nwCornerDif = rotateVector(nw, -currentRotation.current)
+    // const seCornerDif = rotateVector(se, -currentRotation.current)
 
-    nwCornerDif.x = dir * Math.abs(nwCornerDif.x)
-    nwCornerDif.y = dir * Math.abs(nwCornerDif.y)
-    seCornerDif.x = dir * Math.abs(seCornerDif.x)
-    seCornerDif.y = dir * Math.abs(seCornerDif.y)
+    const { x: ddx, y: ddy } = rotateVector({ x: difX, y: difY }, -currentRotation.current)
+
+    // console.log(rotatedVector, nwCornerDif, seCornerDif)
+
+    const nwCornerDif = { x: 0, y: 0 }
+    const seCornerDif = { x: 0, y: 0 }
+
+    const _signX = rotatedVector.x >= 0 ? 1 : -1
+    const _signY = rotatedVector.y >= 0 ? 1 : -1
+
+    if (movingSides.current.includes('n')) {
+      nwCornerDif.y = _signY * dy
+    }
+    if (movingSides.current.includes('e')) {
+      seCornerDif.x = _signX * dx
+    }
+    if (movingSides.current.includes('s')) {
+      seCornerDif.y = _signY * dy
+    }
+    if (movingSides.current.includes('w')) {
+      nwCornerDif.x = _signX * dx
+    }
+
+    console.log(dx, dy, ddx, ddy)
+    console.log(Math.sign(rotatedVector.x) * dx, Math.sign(rotatedVector.y) * dy)
+    console.log(nwCornerDif, seCornerDif)
+
+    // nwCornerDif.x = Math.sign(rotatedVector.x) * nwCornerDif.x
+    // nwCornerDif.y = Math.sign(rotatedVector.y) * nwCornerDif.y
+    // seCornerDif.x = Math.sign(rotatedVector.x) * seCornerDif.x
+    // seCornerDif.y = Math.sign(rotatedVector.y) * seCornerDif.y
+
+    // console.log(
+    //   isUpscaling ? 'up' : 'down',
+    //   nwCornerDif,
+    //   seCornerDif,
+    //   '|',
+    //   difX,
+    //   difY,
+    //   '||||',
+    //   ddx,
+    //   ddy,
+    //   ((currentRotation.current * 180) / Math.PI) % 360,
+    //   '=',
+    //   dx,
+    //   dy,
+    // )
 
     const suggestedWidth = imageDimensions.current.width + nwCornerDif.x + seCornerDif.x
     const suggestedHeight = imageDimensions.current.height + nwCornerDif.y + seCornerDif.y
 
+    // console.log(suggestedWidth, suggestedHeight, imageDimensions.current)
+
     const scaleX: number = suggestedWidth / imageDimensions.current.width
     const scaleY: number = suggestedHeight / imageDimensions.current.height
-    const scale: number = Math.min(scaleX, scaleY)
+    const scale: number = (scaleX + scaleY) / 2 // Math.min(scaleX, scaleY)
 
     const scaledWidth = imageDimensions.current.width * scale
     const scaledHeight = imageDimensions.current.height * scale
