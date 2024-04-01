@@ -11,9 +11,10 @@ import {
 } from 'consts'
 import { DefinedPosition, Dimensions, ImageData, Sides } from 'types/imageData.ts'
 import calcCornersCoords from 'utils/calcCornersCoords.ts'
-import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
+import distanceBetweenPoints from 'utils/distanceBetweenPoints.ts'
 import distanceFromPointToLine from 'utils/distanceFromPointToLine.ts'
+import findPerpendicularPoint from 'utils/findPerpendicularPoint.ts'
 import negativeOrZero from 'utils/negativeOrZero.ts'
 import rotateVector from 'utils/rotateVector.ts'
 
@@ -80,7 +81,7 @@ function Image(
   const borderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
   const hotBorderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
 
-  const rect = imageRef.current?.getBoundingClientRect()
+  const rect = imageRef.current?.getBoundingClientRect() || { x: 0, y: 0, width: 0, height: 0 }
   const ratio = originalWidth / originalHeight
 
   const { wallId } = useParams() as {
@@ -119,6 +120,8 @@ function Image(
   function changeBorderSize({ width, height }: Dimensions, isFinished = true) {
     borderRef.current!.style.width = `${width}px`
     borderRef.current!.style.height = `${height}px`
+    imageRef.current!.style.transformOrigin = `${width / 2}px ${height / 2}px`
+    imageInBorderRef.current!.style.transformOrigin = `${width / 2}px ${height / 2}px`
 
     if (isFinished) {
       borderDimensions.current = { width, height }
@@ -164,13 +167,97 @@ function Image(
     }
   }, [borderOffsetX, borderOffsetY])
 
+  function adjust() {
+    const {
+      A: a,
+      B: b,
+      C: c,
+      D: d,
+    } = calcCornersCoords(hotBorderDimensions.current, {
+      x: 0,
+      y: 0,
+    })
+    const bcorners = [a, b, c, d]
+
+    const corners = calcCornersCoords(
+      imageDimensions.current,
+      imageOffset.current,
+      hotCurrentRotation.current,
+      {
+        x: hotBorderDimensions.current.width / 2,
+        y: hotBorderDimensions.current.height / 2,
+      },
+    )
+    bcorners.forEach((corner) => {
+      EDGES.forEach((edge) => {
+        const distance = negativeOrZero(
+          distanceFromPointToLine(corners[edge.from], corners[edge.to], corner),
+        )
+
+        if (distance) {
+          const p = findPerpendicularPoint(
+            { point1: corners[edge.from], point2: corners[edge.to] },
+            corner,
+          )
+
+          const v = { x: corner.x - p.x, y: corner.y - p.y }
+
+          corners[edge.from] = { x: corners[edge.from].x + v.x, y: corners[edge.from].y + v.y }
+          corners[edge.to] = { x: corners[edge.to].x + v.x, y: corners[edge.to].y + v.y }
+        }
+      })
+    })
+
+    const suggestedWidth = distanceBetweenPoints(corners.A, corners.B)
+    const suggestedHeight = distanceBetweenPoints(corners.A, corners.D)
+    const w2 = suggestedHeight * ratio
+    const h2 = suggestedWidth / ratio
+    let newW
+    let newH
+    if (suggestedWidth - w2 < 0) {
+      newW = w2
+      newH = suggestedHeight
+    } else {
+      newW = suggestedWidth
+      newH = h2
+    }
+
+    changeImageSize(
+      {
+        width: newW,
+        height: newH,
+      },
+      false,
+    )
+
+    changeImagePosition(imageOffset.current, false)
+    bcorners.forEach((corner) => {
+      const corners = calcCornersCoords(
+        hotImageDimensions.current,
+        hotImageOffset.current,
+        hotCurrentRotation.current,
+        {
+          x: hotBorderDimensions.current.width / 2,
+          y: hotBorderDimensions.current.height / 2,
+        },
+      )
+      const distanceY = negativeOrZero(distanceFromPointToLine(corners.A, corners.B, corner))
+      const distanceX = negativeOrZero(distanceFromPointToLine(corners.D, corners.A, corner))
+
+      changeImagePosition(
+        { x: hotImageOffset.current.x + distanceX, y: hotImageOffset.current.y + distanceY },
+        false,
+      )
+    })
+  }
+
   function adjustImagePosition(newOffsetX = 0, newOffsetY = 0, isFinished: boolean) {
     const {
       A: a,
       B: b,
       C: c,
       D: d,
-    } = calcCornersCoords(borderDimensions.current, {
+    } = calcCornersCoords(hotBorderDimensions.current, {
       x: 0,
       y: 0,
     })
@@ -193,8 +280,8 @@ function Image(
           },
           currentRotation.current,
           {
-            x: borderDimensions.current.width / 2,
-            y: borderDimensions.current.height / 2,
+            x: hotBorderDimensions.current.width / 2,
+            y: hotBorderDimensions.current.height / 2,
           },
         )
         const distance = negativeOrZero(
@@ -220,8 +307,8 @@ function Image(
     if (isEditingMode) {
       isDragging.current = true
       mouseOffset.current = {
-        x: event.clientX, //- imageOffset.current.x,
-        y: event.clientY, //- imageOffset.current.y,
+        x: event.clientX,
+        y: event.clientY,
       }
       event.stopPropagation()
     }
@@ -372,17 +459,7 @@ function Image(
 
     changeBorderPosition({ x: newOffsetX, y: newOffsetY }, false)
 
-    const scale = calculateScaleFactor(
-      originalWidth,
-      originalHeight,
-      hotBorderDimensions.current.width,
-      hotBorderDimensions.current.height,
-    )
-
-    currentScale.current = scale
-
-    changeImageSize({ width: originalWidth * scale, height: originalHeight * scale })
-    adjustImagePosition(0, 0, false)
+    adjust()
   }
 
   function handleBorderResizeFinished() {
@@ -397,119 +474,11 @@ function Image(
     })
   }
 
-  function findPerpendicularPoint(
-    line: {
-      point1: DefinedPosition
-      point2: DefinedPosition
-    },
-    point: DefinedPosition,
-  ): DefinedPosition {
-    const slope = (line.point2.y - line.point1.y) / (line.point2.x - line.point1.x)
-
-    if (slope === 0) {
-      return { x: point.x, y: line.point1.y }
-    }
-
-    const perpendicularSlope = -1 / slope
-    const perpendicularIntercept = point.y - perpendicularSlope * point.x
-
-    const x =
-      (perpendicularIntercept - line.point1.y + slope * line.point1.x) /
-      (slope - perpendicularSlope)
-    const y = slope * (x - line.point1.x) + line.point1.y
-
-    return { x, y }
-  }
-
-  function distanceBetweenPoints(p1: DefinedPosition, p2: DefinedPosition): number {
-    return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
-  }
-
   function handleRotating(diffAngle: number) {
     const angle = currentRotation.current + diffAngle
     changeImageRotation(angle, false)
 
-    const {
-      A: a,
-      B: b,
-      C: c,
-      D: d,
-    } = calcCornersCoords(borderDimensions.current, {
-      x: 0,
-      y: 0,
-    })
-    const bcorners = [a, b, c, d]
-
-    const corners = calcCornersCoords(
-      imageDimensions.current,
-      imageOffset.current,
-      hotCurrentRotation.current,
-      {
-        x: borderDimensions.current.width / 2,
-        y: borderDimensions.current.height / 2,
-      },
-    )
-    bcorners.forEach((corner) => {
-      EDGES.forEach((edge) => {
-        const distance = negativeOrZero(
-          distanceFromPointToLine(corners[edge.from], corners[edge.to], corner),
-        )
-
-        if (distance) {
-          const p = findPerpendicularPoint(
-            { point1: corners[edge.from], point2: corners[edge.to] },
-            corner,
-          )
-
-          const v = { x: corner.x - p.x, y: corner.y - p.y }
-
-          corners[edge.from] = { x: corners[edge.from].x + v.x, y: corners[edge.from].y + v.y }
-          corners[edge.to] = { x: corners[edge.to].x + v.x, y: corners[edge.to].y + v.y }
-        }
-      })
-    })
-
-    const suggestedWidth = distanceBetweenPoints(corners.A, corners.B)
-    const suggestedHeight = distanceBetweenPoints(corners.A, corners.D)
-    const w2 = suggestedHeight * ratio
-    const h2 = suggestedWidth / ratio
-    let newW
-    let newH
-    if (suggestedWidth - w2 < 0) {
-      newW = w2
-      newH = suggestedHeight
-    } else {
-      newW = suggestedWidth
-      newH = h2
-    }
-
-    changeImageSize(
-      {
-        width: newW,
-        height: newH,
-      },
-      false,
-    )
-
-    changeImagePosition(imageOffset.current, false)
-    bcorners.forEach((corner) => {
-      const corners = calcCornersCoords(
-        hotImageDimensions.current,
-        hotImageOffset.current,
-        hotCurrentRotation.current,
-        {
-          x: borderDimensions.current.width / 2,
-          y: borderDimensions.current.height / 2,
-        },
-      )
-      const distanceY = negativeOrZero(distanceFromPointToLine(corners.A, corners.B, corner))
-      const distanceX = negativeOrZero(distanceFromPointToLine(corners.D, corners.A, corner))
-
-      changeImagePosition(
-        { x: hotImageOffset.current.x + distanceX, y: hotImageOffset.current.y + distanceY },
-        false,
-      )
-    })
+    adjust()
   }
 
   function handleRotatingFinished() {
@@ -524,6 +493,10 @@ function Image(
     })
   }
 
+  function toggleEditingMode() {
+    setIsEditingMode((isEditingMode) => !isEditingMode)
+  }
+
   return (
     <div className={`absolute select-none flex`} ref={ref}>
       <div
@@ -534,7 +507,7 @@ function Image(
           height: borderHeight,
         }}
         onMouseDownCapture={onSelect}
-        onDoubleClick={() => setIsEditingMode((isEditingMode) => !isEditingMode)}
+        onDoubleClick={toggleEditingMode}
         ref={borderRef}
       >
         <ResizeHelper
@@ -543,7 +516,7 @@ function Image(
           variant='border'
         />
         <div
-          className={`${isEditingMode ? 'overflow-visible' : 'overflow-visible'}`}
+          className={`${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
           style={{ width: 'inherit', height: 'inherit' }}
         >
           <div
@@ -568,7 +541,6 @@ function Image(
                   backgroundSize: `contain`,
                   width: 'inherit',
                   height: 'inherit',
-                  transformOrigin: `${borderDimensions.current.width / 2}px ${borderDimensions.current.height / 2}px`,
                 }}
               ></div>
             </div>
@@ -578,7 +550,6 @@ function Image(
                 background: `url(${src}`,
                 backgroundSize: 'contain',
                 opacity: '50%',
-                transformOrigin: `${borderDimensions.current.width / 2}px ${borderDimensions.current.height / 2}px`,
               }}
               ref={imageRef}
               onMouseDown={handleMouseDown}

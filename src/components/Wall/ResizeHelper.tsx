@@ -9,7 +9,7 @@ const styles = {
 }
 
 interface ResizeHelperProps {
-  onScaling: (props: { difX: number; difY: number; movingSides: string[] }) => void
+  onScaling: (props: { difX: number; difY: number; movingSides: Sides[] }) => void
   onScalingFinished: () => void
   variant: 'border' | 'image'
 }
