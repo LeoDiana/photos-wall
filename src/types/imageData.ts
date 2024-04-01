@@ -19,7 +19,8 @@ export interface ImageData {
   scale: number
   xOffset: number | null
   yOffset: number | null
-  rotation: number
+  imageRotation: number
+  borderRotation: number
   borderWidth: number
   borderHeight: number
   borderOffsetX: number

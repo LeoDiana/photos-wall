@@ -39,7 +39,8 @@ function Image(
     xOffset,
     yOffset,
     scale,
-    rotation,
+    imageRotation,
+    borderRotation,
     id,
     onSelect,
     onRemoveFromWall,
@@ -63,8 +64,10 @@ function Image(
   const isDragging = useRef(false)
 
   const currentScale = useRef(scale)
-  const currentRotation = useRef(rotation)
-  const hotCurrentRotation = useRef(rotation)
+  const currentRotation = useRef(imageRotation)
+  const hotCurrentRotation = useRef(imageRotation)
+
+  const currentBorderRotation = useRef(borderRotation)
 
   const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // saved
   const hotImageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // in progress
@@ -85,6 +88,12 @@ function Image(
   const hotBorderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
 
   const rect = imageRef.current?.getBoundingClientRect() || { x: 0, y: 0, width: 0, height: 0 }
+  const borderRect = borderRef.current?.getBoundingClientRect() || {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  }
   const ratio = originalWidth / originalHeight
 
   const { wallId } = useParams() as {
@@ -100,7 +109,8 @@ function Image(
       scale: currentScale.current,
       xOffset: imageOffset.current.x,
       yOffset: imageOffset.current.y,
-      rotation: currentRotation.current,
+      imageRotation: currentRotation.current,
+      borderRotation: currentBorderRotation.current,
     })
   }
 
@@ -154,6 +164,11 @@ function Image(
     hotCurrentRotation.current = angle
   }
 
+  function changeBorderRotation(angle: number) {
+    borderRef.current!.style.rotate = `${angle}rad`
+    currentBorderRotation.current = angle
+  }
+
   useEffect(() => {
     setIsEditingMode(false)
   }, [isSelected])
@@ -166,10 +181,15 @@ function Image(
 
   useEffect(() => {
     if (imageRef.current && imageInBorderRef.current) {
-      changeImageRotation(rotation)
       changeImagePosition({ x: xOffset || 0, y: yOffset || 0 })
     }
-  }, [xOffset, yOffset, rotation])
+  }, [xOffset, yOffset])
+
+  useEffect(() => {
+    if (imageRef.current && imageInBorderRef.current) {
+      changeImageRotation(imageRotation)
+    }
+  }, [imageRotation])
 
   useEffect(() => {
     if (borderRef.current) {
@@ -182,6 +202,12 @@ function Image(
       changeBorderPosition({ x: borderOffsetX, y: borderOffsetY })
     }
   }, [borderOffsetX, borderOffsetY])
+
+  useEffect(() => {
+    if (borderRef.current) {
+      changeBorderRotation(borderRotation)
+    }
+  }, [borderRotation])
 
   function adjust() {
     const {
@@ -493,14 +519,26 @@ function Image(
     updateFullImageData()
   }
 
+  function handleBorderRotating(diffAngle: number) {
+    const angle = currentRotation.current + diffAngle
+    changeBorderRotation(angle)
+  }
+
+  function handleBorderRotatingFinished() {
+    // imageDimensions.current = hotImageDimensions.current
+    // imageOffset.current = hotImageOffset.current
+    // currentRotation.current = hotCurrentRotation.current
+    updateFullImageData()
+  }
+
   function toggleEditingMode() {
     setIsEditingMode((isEditingMode) => !isEditingMode)
   }
 
   return (
-    <div className={`absolute select-none flex`} ref={ref}>
+    <div className='absolute select-none flex' ref={ref}>
       <div
-        className={`w-[${borderWidth}px] h-[${borderHeight}px] box-content cursor-move`}
+        className='box-content cursor-move'
         style={{
           zIndex: order,
           width: borderWidth,
@@ -515,6 +553,16 @@ function Image(
           onScalingFinished={handleBorderResizeFinished}
           variant='border'
         />
+        {isEditingMode && (
+          <RotateTool
+            onRotating={handleBorderRotating}
+            onRotatingFinished={handleBorderRotatingFinished}
+            center={{
+              x: borderRect.x! + borderRect.width / 2,
+              y: borderRect.y! + borderRect.height / 2,
+            }}
+          />
+        )}
         <div
           className={`${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
           style={{ width: 'inherit', height: 'inherit' }}
@@ -545,11 +593,10 @@ function Image(
               ></div>
             </div>
             <div
-              className={`relative w-fit h-fit`}
+              className='relative w-fit h-fit opacity-50'
               style={{
                 background: `url(${src}`,
                 backgroundSize: 'contain',
-                opacity: '50%',
               }}
               ref={imageRef}
               onMouseDown={handleMouseDown}
