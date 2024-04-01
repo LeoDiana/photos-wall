@@ -10,13 +10,15 @@ import {
   MIN_BORDER_WIDTH,
 } from 'consts'
 import { DefinedPosition, Dimensions, ImageData, Sides } from 'types/imageData.ts'
-import calcCornersCoords from 'utils/calcCornersCoords.ts'
-import distanceBetweenPoints from 'utils/distanceBetweenPoints.ts'
-import distanceFromPointToLine from 'utils/distanceFromPointToLine.ts'
-import findPerpendicularPoint from 'utils/findPerpendicularPoint.ts'
-import clamp from 'utils/math/clamp.ts'
-import negativeOrZero from 'utils/negativeOrZero.ts'
-import rotateVector from 'utils/rotateVector.ts'
+import {
+  clamp,
+  distanceBetweenPoints,
+  distanceFromPointToLine,
+  findPerpendicularPoint,
+  negativeOrZero,
+  rotateVector,
+  calcCornersCoords,
+} from 'utils/math'
 
 import { calcRescaledDimensions, getCornersDif, getScalingVector } from './rescaleUtils.ts'
 import ResizeHelper from './ResizeHelper.tsx'

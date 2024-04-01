@@ -1,10 +1,6 @@
 import { DefinedPosition } from 'types/imageData.ts'
 
-export function findRotationAngle(
-  center: DefinedPosition,
-  start: DefinedPosition,
-  end: DefinedPosition,
-) {
+function findRotationAngle(center: DefinedPosition, start: DefinedPosition, end: DefinedPosition) {
   const vectorStart = { x: start.x - center.x, y: start.y - center.y }
   const vectorEnd = { x: end.x - center.x, y: end.y - center.y }
 
@@ -23,3 +19,5 @@ export function findRotationAngle(
 
   return angleDiff
 }
+
+export default findRotationAngle

@@ -3,7 +3,7 @@ import { addDoc, collection, getDoc } from 'firebase/firestore'
 import { DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH } from 'consts'
 import { db } from 'firebaseInstances.ts'
 import { ImageData } from 'types/imageData.ts'
-import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
+import calculateScaleFactor from 'utils/math/calculateScaleFactor.ts'
 
 async function getImageDimensions(src: string): Promise<{ width: number; height: number }> {
   return new Promise(function (resolve, reject) {

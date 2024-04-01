@@ -1,4 +1,4 @@
-import { DefinedPosition } from '../types/imageData.ts'
+import { DefinedPosition } from '../../types/imageData.ts'
 
 function rotatePoint(center: DefinedPosition, point: DefinedPosition, angle: number) {
   return {

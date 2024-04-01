@@ -2,7 +2,7 @@ import { MouseEvent, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { DefinedPosition } from 'types/imageData.ts'
-import { findRotationAngle } from 'utils/findRotationAngle.ts'
+import { findRotationAngle } from 'utils/math'
 
 interface RotateToolProps {
   center: DefinedPosition

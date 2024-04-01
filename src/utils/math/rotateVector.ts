@@ -1,4 +1,4 @@
-import { DefinedPosition } from '../types/imageData.ts'
+import { DefinedPosition } from '../../types/imageData.ts'
 
 function rotateVector(vector: DefinedPosition, angleInRadians: number) {
   const rotatedX = vector.x * Math.cos(angleInRadians) - vector.y * Math.sin(angleInRadians)

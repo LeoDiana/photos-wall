@@ -1,8 +1,6 @@
+import { DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH } from 'consts'
 import { DefinedPosition, Dimensions } from 'types/imageData.ts'
-
-import { DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH } from '../consts'
-
-import rotatePoint from './rotatePoint.ts'
+import { rotatePoint } from 'utils/math'
 
 function calcCornersCoords(
   dimensions: Dimensions,

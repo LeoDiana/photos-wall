@@ -1,4 +1,4 @@
-import { DefinedPosition } from '../types/imageData.ts'
+import { DefinedPosition } from '../../types/imageData.ts'
 
 function distanceFromPointToLine(
   point1: DefinedPosition,
