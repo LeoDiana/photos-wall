@@ -1,7 +1,7 @@
 import { MAX_SCALE } from 'consts'
 import { DefinedPosition, Dimensions, Sides } from 'types/imageData.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
-import clamp from 'utils/clamp.ts'
+import clamp from 'utils/math/clamp.ts'
 import rotateVector from 'utils/rotateVector.ts'
 
 export function calcRescaledDimensions(

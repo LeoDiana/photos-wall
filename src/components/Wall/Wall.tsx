@@ -1,9 +1,9 @@
 import { MouseEvent, useEffect, useRef, useState } from 'react'
 
 import { ImageData, Position } from 'types/imageData.ts'
-import clamp from 'utils/clamp.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
+import clamp from 'utils/math/clamp.ts'
 
 import Image from './Image.tsx'
 

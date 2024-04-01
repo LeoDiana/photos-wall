@@ -11,10 +11,10 @@ import {
 } from 'consts'
 import { DefinedPosition, Dimensions, ImageData, Sides } from 'types/imageData.ts'
 import calcCornersCoords from 'utils/calcCornersCoords.ts'
-import clamp from 'utils/clamp.ts'
 import distanceBetweenPoints from 'utils/distanceBetweenPoints.ts'
 import distanceFromPointToLine from 'utils/distanceFromPointToLine.ts'
 import findPerpendicularPoint from 'utils/findPerpendicularPoint.ts'
+import clamp from 'utils/math/clamp.ts'
 import negativeOrZero from 'utils/negativeOrZero.ts'
 import rotateVector from 'utils/rotateVector.ts'
 
@@ -57,8 +57,9 @@ function Image(
   const imageRef = useRef<HTMLDivElement>(null)
   const imageInBorderRef = useRef<HTMLDivElement>(null)
 
-  const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from start corner (Top Left)
+  const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from top left corner
   const isDragging = useRef(false)
+
   const currentScale = useRef(scale)
   const currentRotation = useRef(rotation)
   const hotCurrentRotation = useRef(rotation)
@@ -86,6 +87,19 @@ function Image(
 
   const { wallId } = useParams() as {
     wallId: string
+  }
+
+  function updateFullImageData() {
+    updateImageData(id, wallId, {
+      borderWidth: borderDimensions.current.width,
+      borderHeight: borderDimensions.current.height,
+      borderOffsetX: borderOffset.current.x,
+      borderOffsetY: borderOffset.current.y,
+      scale: currentScale.current,
+      xOffset: imageOffset.current.x,
+      yOffset: imageOffset.current.y,
+      rotation: currentRotation.current,
+    })
   }
 
   function changeImagePosition({ x, y }: DefinedPosition, isFinished = true) {
@@ -327,7 +341,7 @@ function Image(
   function handleMouseUp() {
     isDragging.current = false
     imageOffset.current = hotImageOffset.current
-    updateImageData(id, wallId, { xOffset: imageOffset.current.x, yOffset: imageOffset.current.y })
+    updateFullImageData()
   }
 
   function handleScaling({
@@ -421,11 +435,7 @@ function Image(
   function handleScalingFinished() {
     imageOffset.current = hotImageOffset.current
     imageDimensions.current = hotImageDimensions.current
-    updateImageData(id, wallId, {
-      scale: currentScale.current,
-      xOffset: imageOffset.current.x,
-      yOffset: imageOffset.current.y,
-    })
+    updateFullImageData()
   }
 
   function handleBorderResize({
@@ -465,13 +475,7 @@ function Image(
   function handleBorderResizeFinished() {
     borderDimensions.current = hotBorderDimensions.current
     borderOffset.current = hotBorderOffset.current
-    updateImageData(id, wallId, {
-      borderWidth: borderDimensions.current.width,
-      borderHeight: borderDimensions.current.height,
-      borderOffsetX: borderOffset.current.x,
-      borderOffsetY: borderOffset.current.y,
-      scale: currentScale.current,
-    })
+    updateFullImageData()
   }
 
   function handleRotating(diffAngle: number) {
@@ -485,12 +489,7 @@ function Image(
     imageDimensions.current = hotImageDimensions.current
     imageOffset.current = hotImageOffset.current
     currentRotation.current = hotCurrentRotation.current
-    updateImageData(id, wallId, {
-      xOffset: imageOffset.current.x,
-      yOffset: imageOffset.current.y,
-      scale: currentScale.current,
-      rotation: currentRotation.current,
-    })
+    updateFullImageData()
   }
 
   function toggleEditingMode() {
