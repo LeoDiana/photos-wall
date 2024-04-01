@@ -1,8 +1,14 @@
-import { MAX_BORDER_HEIGHT, MAX_BORDER_WIDTH, MIN_BORDER_HEIGHT, MIN_BORDER_WIDTH } from 'constants'
 import { ForwardedRef, forwardRef, MouseEvent, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { updateImageData } from 'api'
+import {
+  EDGES,
+  MAX_BORDER_HEIGHT,
+  MAX_BORDER_WIDTH,
+  MIN_BORDER_HEIGHT,
+  MIN_BORDER_WIDTH,
+} from 'consts'
 import { DefinedPosition, Dimensions, ImageData, Sides } from 'types/imageData.ts'
 import calcCornersCoords from 'utils/calcCornersCoords.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
@@ -14,18 +20,6 @@ import rotateVector from 'utils/rotateVector.ts'
 import { calcRescaledDimensions, getCornersDif, getScalingVector } from './rescaleUtils.ts'
 import ResizeHelper from './ResizeHelper.tsx'
 import RotateTool from './RotateTool.tsx'
-
-const EDGES: Array<{
-  from: 'A' | 'B' | 'C' | 'D'
-  to: 'A' | 'B' | 'C' | 'D'
-  xOffsetMultiplier: number
-  yOffsetMultiplier: number
-}> = [
-  { from: 'D', to: 'A', xOffsetMultiplier: 1, yOffsetMultiplier: 0 },
-  { from: 'A', to: 'B', xOffsetMultiplier: 0, yOffsetMultiplier: 1 },
-  { from: 'B', to: 'C', xOffsetMultiplier: -1, yOffsetMultiplier: 0 },
-  { from: 'C', to: 'D', xOffsetMultiplier: 0, yOffsetMultiplier: -1 },
-]
 
 interface ImageProps extends ImageData {
   isSelected: boolean
@@ -171,7 +165,15 @@ function Image(
   }, [borderOffsetX, borderOffsetY])
 
   function adjustImagePosition(newOffsetX = 0, newOffsetY = 0, isFinished: boolean) {
-    const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
+    const {
+      A: a,
+      B: b,
+      C: c,
+      D: d,
+    } = calcCornersCoords(borderDimensions.current, {
+      x: 0,
+      y: 0,
+    })
     const corners = [a, b, c, d]
 
     const { x: _x, y: _y } = rotateVector(
@@ -185,8 +187,15 @@ function Image(
       EDGES.forEach((edge) => {
         const corners = calcCornersCoords(
           hotImageDimensions.current,
-          { x: maxOffsetX, y: maxOffsetY },
+          {
+            x: maxOffsetX,
+            y: maxOffsetY,
+          },
           currentRotation.current,
+          {
+            x: borderDimensions.current.width / 2,
+            y: borderDimensions.current.height / 2,
+          },
         )
         const distance = negativeOrZero(
           distanceFromPointToLine(corners[edge.from], corners[edge.to], corner),
@@ -244,10 +253,10 @@ function Image(
     movingSides: Sides[]
   }) {
     const { width: widthDif, height: heightDif } = getCornersDif(
-      movingSides,
-      getScalingVector(movingSides, -currentRotation.current),
       difX,
       difY,
+      movingSides,
+      getScalingVector(movingSides, -currentRotation.current),
     )
 
     const {
@@ -267,7 +276,15 @@ function Image(
     const newYoffset =
       imageOffset.current.y + (imageDimensions.current.height - actualHeight) * signY
 
-    const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
+    const {
+      A: a,
+      B: b,
+      C: c,
+      D: d,
+    } = calcCornersCoords(borderDimensions.current, {
+      x: 0,
+      y: 0,
+    })
     const corners = [a, b, c, d]
     let canBeRescaled = true
 
@@ -275,8 +292,15 @@ function Image(
       EDGES.forEach((edge) => {
         const corners = calcCornersCoords(
           { width: actualWidth, height: actualHeight },
-          { x: newXoffset, y: newYoffset },
+          {
+            x: newXoffset,
+            y: newYoffset,
+          },
           currentRotation.current,
+          {
+            x: borderDimensions.current.width / 2,
+            y: borderDimensions.current.height / 2,
+          },
         )
         const distance = negativeOrZero(
           distanceFromPointToLine(corners[edge.from], corners[edge.to], corner),
@@ -318,24 +342,33 @@ function Image(
   }
 
   function handleBorderResize({
-    nwCornerDif,
-    seCornerDif,
+    difX,
+    difY,
+    movingSides,
   }: {
     difX: number
     difY: number
-    nwCornerDif: DefinedPosition
-    seCornerDif: DefinedPosition
+    movingSides: Sides[]
   }) {
-    const suggestedWidth = borderDimensions.current.width + nwCornerDif.x + seCornerDif.x
-    const suggestedHeight = borderDimensions.current.height + nwCornerDif.y + seCornerDif.y
+    const { width: difW, height: difH } = getCornersDif(difX, -difY, movingSides)
+
+    const suggestedWidth =
+      borderDimensions.current.width + difW * (movingSides.includes(Sides.left) ? -1 : 1)
+    const suggestedHeight =
+      borderDimensions.current.height + difH * (movingSides.includes(Sides.top) ? -1 : 1)
 
     const newWidth = clamp(MIN_BORDER_WIDTH, MAX_BORDER_WIDTH, suggestedWidth)
     const newHeight = clamp(MIN_BORDER_HEIGHT, MAX_BORDER_HEIGHT, suggestedHeight)
 
     changeBorderSize({ width: newWidth, height: newHeight }, false)
 
-    const newOffsetX = borderOffset.current.x - nwCornerDif.x
-    const newOffsetY = borderOffset.current.y - nwCornerDif.y
+    const actualDifX = borderDimensions.current.width - newWidth
+    const actualDifY = borderDimensions.current.height - newHeight
+
+    const newOffsetX =
+      borderOffset.current.x + actualDifX * (movingSides.includes(Sides.left) ? 1 : 0)
+    const newOffsetY =
+      borderOffset.current.y + actualDifY * (movingSides.includes(Sides.top) ? 1 : 0)
 
     changeBorderPosition({ x: newOffsetX, y: newOffsetY }, false)
 
@@ -396,13 +429,25 @@ function Image(
     const angle = currentRotation.current + diffAngle
     changeImageRotation(angle, false)
 
-    const { A: a, B: b, C: c, D: d } = calcCornersCoords(borderDimensions.current, { x: 0, y: 0 })
+    const {
+      A: a,
+      B: b,
+      C: c,
+      D: d,
+    } = calcCornersCoords(borderDimensions.current, {
+      x: 0,
+      y: 0,
+    })
     const bcorners = [a, b, c, d]
 
     const corners = calcCornersCoords(
       imageDimensions.current,
       imageOffset.current,
       hotCurrentRotation.current,
+      {
+        x: borderDimensions.current.width / 2,
+        y: borderDimensions.current.height / 2,
+      },
     )
     bcorners.forEach((corner) => {
       EDGES.forEach((edge) => {
@@ -452,6 +497,10 @@ function Image(
         hotImageDimensions.current,
         hotImageOffset.current,
         hotCurrentRotation.current,
+        {
+          x: borderDimensions.current.width / 2,
+          y: borderDimensions.current.height / 2,
+        },
       )
       const distanceY = negativeOrZero(distanceFromPointToLine(corners.A, corners.B, corner))
       const distanceX = negativeOrZero(distanceFromPointToLine(corners.D, corners.A, corner))

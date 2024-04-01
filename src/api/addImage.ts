@@ -1,11 +1,9 @@
 import { addDoc, collection, getDoc } from 'firebase/firestore'
 
+import { DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH } from 'consts'
 import { db } from 'firebaseInstances.ts'
 import { ImageData } from 'types/imageData.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
-
-const IMAGE_HEIGHT = 250
-const IMAGE_WIDTH = 250
 
 async function getImageDimensions(src: string): Promise<{ width: number; height: number }> {
   return new Promise(function (resolve, reject) {
@@ -36,8 +34,8 @@ async function addImage(src: string, wallId = 'photos') {
     y: null,
     originalHeight: dimensions.height,
     originalWidth: dimensions.width,
-    borderHeight: IMAGE_HEIGHT,
-    borderWidth: IMAGE_WIDTH,
+    borderHeight: DEFAULT_IMAGE_HEIGHT,
+    borderWidth: DEFAULT_IMAGE_WIDTH,
     borderOffsetX: 0,
     borderOffsetY: 0,
     xOffset: null,

@@ -1,8 +1,18 @@
 import { DefinedPosition, Dimensions } from 'types/imageData.ts'
 
+import { DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH } from '../consts'
+
 import rotatePoint from './rotatePoint.ts'
 
-function calcCornersCoords(dimensions: Dimensions, position: DefinedPosition, angle = 0) {
+function calcCornersCoords(
+  dimensions: Dimensions,
+  position: DefinedPosition,
+  angle = 0,
+  rotationCenter: DefinedPosition = {
+    x: DEFAULT_IMAGE_WIDTH / 2,
+    y: DEFAULT_IMAGE_HEIGHT / 2,
+  },
+) {
   const A = { x: position.x, y: position.y }
   const B = {
     x: dimensions.width + position.x,
@@ -17,16 +27,11 @@ function calcCornersCoords(dimensions: Dimensions, position: DefinedPosition, an
     y: dimensions.height + position.y,
   }
 
-  const center = {
-    x: 125,
-    y: 125,
-  }
-
   return {
-    A: rotatePoint(center, A, angle),
-    B: rotatePoint(center, B, angle),
-    C: rotatePoint(center, C, angle),
-    D: rotatePoint(center, D, angle),
+    A: rotatePoint(rotationCenter, A, angle),
+    B: rotatePoint(rotationCenter, B, angle),
+    C: rotatePoint(rotationCenter, C, angle),
+    D: rotatePoint(rotationCenter, D, angle),
   }
 }
 

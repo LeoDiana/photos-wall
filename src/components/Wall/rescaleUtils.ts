@@ -1,5 +1,4 @@
-import { MAX_SCALE } from 'constants'
-
+import { MAX_SCALE } from 'consts'
 import { DefinedPosition, Dimensions, Sides } from 'types/imageData.ts'
 import calculateScaleFactor from 'utils/calculateScaleFactor.ts'
 import clamp from 'utils/clamp.ts'
@@ -42,10 +41,10 @@ export function calcRescaledDimensions(
 }
 
 export function getCornersDif(
-  movingSides: Sides[],
-  scalingVector: DefinedPosition,
   difX: number,
   difY: number,
+  movingSides: Sides[],
+  scalingVector: DefinedPosition = { x: 1, y: 1 },
 ) {
   const nwCornerDif = { x: 0, y: 0 }
   const seCornerDif = { x: 0, y: 0 }
