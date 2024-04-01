@@ -211,12 +211,14 @@ function Image(
         )
 
         if (distance) {
+          // debugger
           const p = findPerpendicularPoint(
             { point1: corners[edge.from], point2: corners[edge.to] },
             corner,
           )
-
           const v = { x: corner.x - p.x, y: corner.y - p.y }
+
+          console.log('wrong', p, v)
 
           corners[edge.from] = { x: corners[edge.from].x + v.x, y: corners[edge.from].y + v.y }
           corners[edge.to] = { x: corners[edge.to].x + v.x, y: corners[edge.to].y + v.y }

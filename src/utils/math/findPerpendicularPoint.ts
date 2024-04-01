@@ -7,11 +7,15 @@ function findPerpendicularPoint(
   },
   point: DefinedPosition,
 ): DefinedPosition {
-  const slope = (line.point2.y - line.point1.y) / (line.point2.x - line.point1.x)
-
-  if (slope === 0) {
+  if (line.point2.y - line.point1.y === 0) {
     return { x: point.x, y: line.point1.y }
   }
+
+  if (line.point2.x - line.point1.x === 0) {
+    return { x: line.point1.x, y: point.y }
+  }
+
+  const slope = (line.point2.y - line.point1.y) / (line.point2.x - line.point1.x)
 
   const perpendicularSlope = -1 / slope
   const perpendicularIntercept = point.y - perpendicularSlope * point.x
