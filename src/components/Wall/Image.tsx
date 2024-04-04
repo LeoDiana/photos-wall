@@ -64,6 +64,7 @@ function Image(
   const hotCurrentRotation = useRef(imageRotation)
 
   const currentBorderRotation = useRef(borderRotation)
+  const hotBorderRotation = useRef(borderRotation)
 
   const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // saved
   const hotImageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // in progress
@@ -160,9 +161,12 @@ function Image(
     hotCurrentRotation.current = angle
   }
 
-  function changeBorderRotation(angle: number) {
+  function changeBorderRotation(angle: number, isFinished = true) {
     borderRef.current!.style.rotate = `${angle}rad`
-    currentBorderRotation.current = angle
+    if (isFinished) {
+      currentBorderRotation.current = angle
+    }
+    hotBorderRotation.current = angle
   }
 
   useEffect(() => {
@@ -516,11 +520,12 @@ function Image(
   }
 
   function handleBorderRotating(diffAngle: number) {
-    const angle = currentRotation.current + diffAngle
-    changeBorderRotation(angle)
+    const angle = currentBorderRotation.current + diffAngle
+    changeBorderRotation(angle, false)
   }
 
   function handleBorderRotatingFinished() {
+    currentBorderRotation.current = hotBorderRotation.current
     updateFullImageData()
   }
 
