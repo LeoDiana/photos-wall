@@ -27,8 +27,6 @@ import RotateTool from './RotateTool.tsx'
 interface ImageProps extends ImageData {
   isSelected: boolean
   onSelect: () => void
-  onRemoveFromWall: () => void
-  onDeleteImage: () => void
 }
 
 function Image(
@@ -43,8 +41,6 @@ function Image(
     borderRotation,
     id,
     onSelect,
-    onRemoveFromWall,
-    onDeleteImage,
     isSelected = false,
     order = 0,
     borderHeight,
@@ -525,9 +521,6 @@ function Image(
   }
 
   function handleBorderRotatingFinished() {
-    // imageDimensions.current = hotImageDimensions.current
-    // imageOffset.current = hotImageOffset.current
-    // currentRotation.current = hotCurrentRotation.current
     updateFullImageData()
   }
 
@@ -548,11 +541,13 @@ function Image(
         onDoubleClick={toggleEditingMode}
         ref={borderRef}
       >
-        <ResizeHelper
-          onScaling={handleBorderResize}
-          onScalingFinished={handleBorderResizeFinished}
-          variant='border'
-        />
+        {isSelected && (
+          <ResizeHelper
+            onScaling={handleBorderResize}
+            onScalingFinished={handleBorderResizeFinished}
+            variant='border'
+          />
+        )}
         {isEditingMode && (
           <RotateTool
             onRotating={handleBorderRotating}

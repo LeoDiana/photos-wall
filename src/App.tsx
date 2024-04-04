@@ -1,26 +1,24 @@
-import { ChangeEvent, MouseEvent, useEffect, useRef, useState } from 'react'
+import { MouseEvent, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 
 import Wall from 'components/Wall/Wall.tsx'
-import useUpload from 'hooks/useUpload.ts'
-import { ImageData } from 'types/imageData.ts'
 
-import { addImage, getImages, updateImageData } from './api'
+import { getImages, updateImageData } from './api'
 import deleteImage from './api/deleteImage.ts'
-import UploadWrapper from './components/UploadWrapper'
-
-function isImageWithoutCoords(imageData: ImageData) {
-  return imageData.x === null && imageData.y === null
-}
+import SidePanel from './components/SidePanel'
+import useStore from './store/useStore.ts'
 
 function App() {
   const { wallId } = useParams() as {
     wallId: string
   }
-  const { handleChange, urls, clear } = useUpload()
-  const [images, setImages] = useState<ImageData[]>([])
 
-  const movingImageIndex = useRef<number | null>(null)
+  const images = useStore((state) => state.images)
+  const setImages = useStore((state) => state.setImages)
+  const deleteImageFromStore = useStore((state) => state.deleteImage)
+
+  const movingImageIndex = useStore((state) => state.selectedImageIndex)
+  const setMovingImageIndex = useStore((state) => state.setSelectedImageIndex)
 
   const wallContainerRef = useRef<HTMLDivElement>(null)
 
@@ -35,47 +33,25 @@ function App() {
     }
   }, [])
 
-  async function handleUpload(event: ChangeEvent<HTMLInputElement>) {
-    handleChange(event)
-  }
-
-  useEffect(() => {
-    ;(async () => {
-      for (const url of urls) {
-        if (url !== 'loading') {
-          const photo = await addImage(url, wallId)
-          setImages((images) => [...images, photo])
-        }
-      }
-      if (urls.length > 0 && urls.every((url) => url !== 'loading')) {
-        clear()
-      }
-    })()
-  }, [urls, wallId])
-
   useEffect(() => {
     ;(async () => {
       setImages(await getImages(wallId))
     })()
-  }, [wallId])
+  }, [setImages, wallId])
 
   function handleImagePositionChange(id: string, x: number | null, y: number | null) {
     updateImageData(id, wallId, { x, y })
-    setImages((images) =>
-      images.map((img) => (img.id === id ? { ...img, x, y, order: Date.now() } : img)),
-    )
+    setImages(images.map((img) => (img.id === id ? { ...img, x, y, order: Date.now() } : img)))
   }
 
   function bringToFront(id: string) {
-    setImages((images) =>
-      images.map((img) => (img.id === id ? { ...img, order: Date.now() } : img)),
-    )
+    setImages(images.map((img) => (img.id === id ? { ...img, order: Date.now() } : img)))
   }
 
   function handleMoveImageToWall(event: MouseEvent<HTMLDivElement>) {
-    if (movingImageIndex.current !== null) {
-      const wall = event.target.getBoundingClientRect()
-      const selectedImageId = images[movingImageIndex.current].id
+    if (movingImageIndex !== null) {
+      const wall = (event.target as HTMLDivElement).getBoundingClientRect()
+      const selectedImageId = images[movingImageIndex].id
       const mouseX = event.clientX - wall.x
       const mouseY = event.clientY - wall.y
 
@@ -84,7 +60,7 @@ function App() {
         y: mouseY,
       }
       handleImagePositionChange(selectedImageId, x, y)
-      movingImageIndex.current = null
+      setMovingImageIndex(null)
     }
   }
 
@@ -94,12 +70,13 @@ function App() {
 
   function handleDeleteImage(id: string) {
     deleteImage(id, wallId)
-    setImages((images) => images.filter((img) => img.id !== id))
+    deleteImageFromStore(id)
   }
 
   return (
-    <div>
+    <div className='relative'>
       <h1 className='text-3xl text-center mt-2'>My wall</h1>
+      <SidePanel />
       <div className='w-screen h-[500px] overflow-scroll' ref={wallContainerRef}>
         <Wall
           images={images}
@@ -110,31 +87,6 @@ function App() {
           handleDeleteImage={handleDeleteImage}
         />
       </div>
-      <div className='w-screen h-40 bg-rose-400 flex fixed bottom-0'>
-        {images.map(
-          (image, index) =>
-            isImageWithoutCoords(image) && (
-              <div
-                key={image.id}
-                className='h-[100px] w-[100px]'
-                draggable
-                onDragEnd={() => {
-                  movingImageIndex.current = index
-                }}
-              >
-                <img src={image.src} draggable={false} />
-              </div>
-            ),
-        )}
-      </div>
-      <UploadWrapper onChange={handleUpload} multiple>
-        <div className='rounded-lg px-4 py-2 border-2 border-gray-300 font-medium fixed bottom-2 -translate-x-1/2 left-1/2'>
-          Upload
-        </div>
-      </UploadWrapper>
-      {urls.some((url) => url === 'loading') && (
-        <div className='font-medium fixed bottom-1 -translate-x-1/2 left-1/2'>LOADING...</div>
-      )}
     </div>
   )
 }
