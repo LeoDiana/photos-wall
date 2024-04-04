@@ -6,8 +6,6 @@ import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 import clamp from 'utils/math/clamp.ts'
 
-import useStore from '../../store/useStore.ts'
-
 import Image from './Image.tsx'
 
 interface WallProps {
@@ -29,8 +27,7 @@ function Wall({
   const positions = useRef<Position[]>([])
   const offset = useRef({ x: 0, y: 0 })
   const isDragging = useRef(false)
-  const selectedImageIndex = useStore((state) => state.selectedImageIndex)
-  const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
+  const selectedImageIndex = useRef<number | null>(null)
   const [lastSelectedImageIndex, setLastSelectedImageIndex] = useState<number | null>(null)
   const [scale, setScale] = useState(1)
   const wallRef = useRef<HTMLDivElement>(null)
@@ -56,28 +53,28 @@ function Wall({
   }, [scale])
 
   function handleSelectImage(index: number) {
-    setSelectedImageIndex(index)
+    selectedImageIndex.current = index
     bringToFront(images[index].id)
   }
 
   function handleMouseDown(event: MouseEvent<HTMLDivElement>) {
     setLastSelectedImageIndex(null)
     isDragging.current = true
-    if (selectedImageIndex !== null) {
+    if (selectedImageIndex.current !== null) {
       offset.current = {
-        x: event.clientX / scale - (positions.current[selectedImageIndex].x || 0),
-        y: event.clientY / scale - (positions.current[selectedImageIndex].y || 0),
+        x: event.clientX / scale - (positions.current[selectedImageIndex.current].x || 0),
+        y: event.clientY / scale - (positions.current[selectedImageIndex.current].y || 0),
       }
     }
   }
 
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
-    if (isDragging.current && selectedImageIndex !== null) {
-      imageRefs.current[selectedImageIndex].style.left =
+    if (isDragging.current && selectedImageIndex.current !== null) {
+      imageRefs.current[selectedImageIndex.current].style.left =
         event.clientX / scale - offset.current.x + 'px'
-      imageRefs.current[selectedImageIndex].style.top =
+      imageRefs.current[selectedImageIndex.current].style.top =
         event.clientY / scale - offset.current.y + 'px'
-      positions.current[selectedImageIndex] = {
+      positions.current[selectedImageIndex.current] = {
         x: event.clientX / scale - offset.current.x,
         y: event.clientY / scale - offset.current.y,
       }
@@ -85,36 +82,36 @@ function Wall({
   }
 
   function handleMouseUp(event: MouseEvent<HTMLDivElement>) {
-    if (selectedImageIndex !== null) {
-      const selectedImageId = images[selectedImageIndex].id
+    if (selectedImageIndex.current !== null) {
+      const selectedImageId = images[selectedImageIndex.current].id
       const mouseX = event.clientX / scale - offset.current.x
       const mouseY = event.clientY / scale - offset.current.y
 
-      const { x, y } = positions.current[selectedImageIndex] || {
+      const { x, y } = positions.current[selectedImageIndex.current] || {
         x: mouseX,
         y: mouseY,
       }
       onImagePositionChange(selectedImageId, x, y)
     }
     isDragging.current = false
-    setLastSelectedImageIndex(selectedImageIndex)
-    setSelectedImageIndex(null)
+    setLastSelectedImageIndex(selectedImageIndex.current)
+    selectedImageIndex.current = null
   }
 
   function handleMouseLeave(event: MouseEvent<HTMLDivElement>) {
-    if (selectedImageIndex !== null) {
-      const selectedImageId = images[selectedImageIndex].id
+    if (selectedImageIndex.current !== null) {
+      const selectedImageId = images[selectedImageIndex.current].id
       const mouseX = event.clientX / scale - offset.current.x
       const mouseY = event.clientY / scale - offset.current.y
 
-      const { x, y } = positions.current[selectedImageIndex] || {
+      const { x, y } = positions.current[selectedImageIndex.current] || {
         x: mouseX,
         y: mouseY,
       }
       onImagePositionChange(selectedImageId, x, y)
     }
     isDragging.current = false
-    setSelectedImageIndex(null)
+    selectedImageIndex.current = null
   }
 
   const imageOrders = getSimplifiedImageOrders(images)
