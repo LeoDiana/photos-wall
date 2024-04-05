@@ -6,6 +6,8 @@ import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 import clamp from 'utils/math/clamp.ts'
 
+import useStore from '../../store/useStore.ts'
+
 import Image from './Image.tsx'
 
 interface WallProps {
@@ -31,6 +33,7 @@ function Wall({
   const [lastSelectedImageIndex, setLastSelectedImageIndex] = useState<number | null>(null)
   const [scale, setScale] = useState(1)
   const wallRef = useRef<HTMLDivElement>(null)
+  const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
 
   useEffect(() => {
     positions.current = images.map((image) => ({ x: image.x, y: image.y }))
@@ -51,6 +54,10 @@ function Wall({
       }
     })
   }, [scale])
+
+  useEffect(() => {
+    setSelectedImageIndex(lastSelectedImageIndex)
+  }, [lastSelectedImageIndex])
 
   function handleSelectImage(index: number) {
     selectedImageIndex.current = index

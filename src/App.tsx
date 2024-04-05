@@ -17,8 +17,8 @@ function App() {
   const setImages = useStore((state) => state.setImages)
   const deleteImageFromStore = useStore((state) => state.deleteImage)
 
-  const selectedImageIndex = useStore((state) => state.selectedImageIndex)
-  const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
+  const movingImageIndex = useStore((state) => state.movingImageIndex)
+  const setMovingImageIndex = useStore((state) => state.setMovingImageIndex)
 
   const wallContainerRef = useRef<HTMLDivElement>(null)
 
@@ -49,9 +49,9 @@ function App() {
   }
 
   function handleMoveImageToWall(event: MouseEvent<HTMLDivElement>) {
-    if (selectedImageIndex !== null) {
+    if (movingImageIndex !== null) {
       const wall = (event.target as HTMLDivElement).getBoundingClientRect()
-      const selectedImageId = images[selectedImageIndex].id
+      const selectedImageId = images[movingImageIndex].id
       const mouseX = event.clientX - wall.x
       const mouseY = event.clientY - wall.y
 
@@ -60,7 +60,7 @@ function App() {
         y: mouseY,
       }
       handleImagePositionChange(selectedImageId, x, y)
-      setSelectedImageIndex(null)
+      setMovingImageIndex(null)
     }
   }
 

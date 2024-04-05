@@ -17,6 +17,7 @@ type UpdateImageDataProps = Partial<
     | 'borderWidth'
     | 'borderOffsetX'
     | 'borderOffsetY'
+    | 'frameStyle'
   >
 >
 

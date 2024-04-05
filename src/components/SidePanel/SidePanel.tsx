@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { ImageIcon, SettingsIcon, SlidersIcon, StickerIcon, PhotosIcon } from 'assets'
+import useStore from 'store/useStore.ts'
 
-import { Uploaded } from './sections'
+import { Uploaded, Editing } from './sections'
 
 enum Sections {
   uploaded = 'photos',
@@ -43,11 +44,20 @@ const sections = [
 function SidePanel() {
   const [isExpanded, setIsExpanded] = useState(true)
   const [selectedSection, setSelectedSection] = useState(Sections.uploaded)
+  const selectedImageIndex = useStore((state) => state.selectedImageIndex)
+
+  useEffect(() => {
+    if (selectedImageIndex) {
+      setSelectedSection(Sections.editing)
+    }
+  }, [selectedImageIndex])
 
   function renderSection() {
     switch (selectedSection) {
       case Sections.uploaded:
         return <Uploaded />
+      case Sections.editing:
+        return <Editing />
       default:
         return <></>
     }

@@ -9,15 +9,16 @@ import {
   MIN_BORDER_HEIGHT,
   MIN_BORDER_WIDTH,
 } from 'consts'
-import { DefinedPosition, Dimensions, ImageData, Sides } from 'types/imageData.ts'
+import useStore from 'store/useStore.ts'
+import { DefinedPosition, Dimensions, FrameStyles, ImageData, Sides } from 'types/imageData.ts'
 import {
+  calcCornersCoords,
   clamp,
   distanceBetweenPoints,
   distanceFromPointToLine,
   findPerpendicularPoint,
   negativeOrZero,
   rotateVector,
-  calcCornersCoords,
 } from 'utils/math'
 
 import { calcRescaledDimensions, getCornersDif, getScalingVector } from './rescaleUtils.ts'
@@ -47,9 +48,14 @@ function Image(
     borderWidth,
     borderOffsetX,
     borderOffsetY,
+    frameStyle,
   }: ImageProps,
   ref: ForwardedRef<HTMLDivElement>,
 ) {
+  const setSelectedImageDataForEditingSection = useStore(
+    (state) => state.setSelectedImageDataForEditingSection,
+  )
+
   const [isEditingMode, setIsEditingMode] = useState(false)
 
   const borderRef = useRef<HTMLDivElement>(null)
@@ -159,6 +165,7 @@ function Image(
       currentRotation.current = angle
     }
     hotCurrentRotation.current = angle
+    setSelectedImageDataForEditingSection({ imageRotation: angle })
   }
 
   function changeBorderRotation(angle: number, isFinished = true) {
@@ -167,6 +174,7 @@ function Image(
       currentBorderRotation.current = angle
     }
     hotBorderRotation.current = angle
+    setSelectedImageDataForEditingSection({ borderRotation: angle })
   }
 
   useEffect(() => {
@@ -623,6 +631,14 @@ function Image(
             </div>
           </div>
         </div>
+        <div
+          className={`absolute top-0 left-0 ${frameStyle === FrameStyles.border ? 'border-8' : 'border-0'}`}
+          style={{
+            zIndex: order,
+            width: borderWidth,
+            height: borderHeight,
+          }}
+        ></div>
       </div>
     </div>
   )

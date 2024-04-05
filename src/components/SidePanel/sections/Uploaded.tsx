@@ -19,7 +19,7 @@ function Uploaded() {
 
   const images = useStore((state) => state.images)
   const setImages = useStore((state) => state.setImages)
-  const setMovingImageIndex = useStore((state) => state.setSelectedImageIndex)
+  const setMovingImageIndex = useStore((state) => state.setMovingImageIndex)
 
   async function handleUpload(event: ChangeEvent<HTMLInputElement>) {
     handleChange(event)
