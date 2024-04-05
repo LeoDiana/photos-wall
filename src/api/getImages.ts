@@ -1,10 +1,10 @@
 import { collection, getDocs, query } from 'firebase/firestore'
 
-import { db } from '../firebaseInstances.ts'
-import { ImageData } from '../types/imageData.ts'
+import { db } from 'firebaseInstances.ts'
+import { ImageData } from 'types/imageData.ts'
 
 async function getImages(wallId = 'photos') {
-  const photosQuery = query(collection(db, wallId))
+  const photosQuery = query(collection(db, 'walls', wallId, 'photos'))
   const photosSnapshot = await getDocs(photosQuery)
   const photos = photosSnapshot.docs.map((d) => ({
     ...d.data(),

@@ -25,7 +25,7 @@ async function getImageDimensions(src: string): Promise<{ width: number; height:
 }
 
 async function addImage(src: string, wallId = 'photos') {
-  const docRef = collection(db, wallId)
+  const docRef = collection(db, 'walls', wallId, 'photos')
   const dimensions = await getImageDimensions(src)
   const newImageRef = await addDoc(docRef, {
     src,

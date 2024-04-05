@@ -1,7 +1,7 @@
 import { doc, updateDoc } from 'firebase/firestore'
 
-import { db } from '../firebaseInstances.ts'
-import { ImageData } from '../types/imageData.ts'
+import { db } from 'firebaseInstances.ts'
+import { ImageData } from 'types/imageData.ts'
 
 type UpdateImageDataProps = Partial<
   Pick<
@@ -22,7 +22,7 @@ type UpdateImageDataProps = Partial<
 >
 
 async function updateImageData(id: string, wallId = 'photos', data: UpdateImageDataProps) {
-  const docRef = doc(db, wallId, id)
+  const docRef = doc(db, 'walls', wallId, 'photos', id)
   await updateDoc(docRef, { order: Date.now(), ...data })
 }
 
