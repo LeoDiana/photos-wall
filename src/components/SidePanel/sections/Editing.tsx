@@ -2,9 +2,8 @@ import { useParams } from 'react-router-dom'
 
 import updateImageData from 'api/updateImageData.ts'
 import useStore from 'store/useStore.ts'
+import { FrameStyles } from 'types/imageData.ts'
 import { toDeg } from 'utils/math'
-
-import { FrameStyles } from '../../../types/imageData.ts'
 
 function Editing() {
   const { wallId } = useParams() as {
@@ -18,7 +17,7 @@ function Editing() {
     (state) => state.selectedImageDataForEditingSection,
   )
 
-  const imgSrc = selectedImageIndex ? images[selectedImageIndex].src : null
+  const imgSrc = Number.isInteger(selectedImageIndex) ? images[selectedImageIndex!].src : null
 
   function handleChangeBorderStyle(style: FrameStyles) {
     if (selectedImageIndex) {
@@ -31,7 +30,7 @@ function Editing() {
     }
   }
 
-  return selectedImageIndex ? (
+  return Number.isInteger(selectedImageIndex) ? (
     <>
       <div>rotation</div>
       <div>{toDeg(selectedImageDataForEditingSection?.borderRotation || 0) || ':('}</div>

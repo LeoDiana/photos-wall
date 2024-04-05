@@ -47,7 +47,7 @@ function SidePanel() {
   const selectedImageIndex = useStore((state) => state.selectedImageIndex)
 
   useEffect(() => {
-    if (selectedImageIndex) {
+    if (Number.isInteger(selectedImageIndex)) {
       setSelectedSection(Sections.editing)
     }
   }, [selectedImageIndex])
@@ -67,7 +67,7 @@ function SidePanel() {
 
   return (
     <div
-      className={`bg-neutral-800 h-screen fixed left-0 top-0 z-10 flex flex-row ${isExpanded ? 'w-[430px]' : 'w-20'}`}
+      className={`bg-neutral-800 h-screen fixed left-0 top-0 z-10 flex flex-row border border-l-1 border-neutral-900 ${isExpanded ? 'w-[430px]' : 'w-20'}`}
     >
       <div
         className='bg-neutral-800 absolute right-0 translate-x-1/2 h-14 w-6 top-1/2 -translate-y-1/2 rounded-xl flex items-center p-1 justify-end select-none -z-10'
@@ -75,7 +75,7 @@ function SidePanel() {
       >
         <p>{isExpanded ? '<' : '>'}</p>
       </div>
-      <div className='bg-neutral-900 w-20 h-screen'>
+      <div className='bg-neutral-900 w-20 h-screen border border-l-1 border-neutral-800'>
         {sections.map(({ id, title, icon: Icon }) => (
           <div
             key={id}
@@ -92,7 +92,7 @@ function SidePanel() {
           </div>
         ))}
       </div>
-      {isExpanded && <div className='grow p-4'>{renderSection()}</div>}
+      {isExpanded && <div className='grow p-4 pb-0'>{renderSection()}</div>}
     </div>
   )
 }

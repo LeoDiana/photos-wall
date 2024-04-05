@@ -1,5 +1,7 @@
 import { MouseEvent, useEffect, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
 
+import getBackground from 'api/getBackground.ts'
 import { MAX_ZOOM, MIN_ZOOM, WALL_HEIGHT, WALL_WIDTH, ZOOM_FACTOR } from 'consts'
 import useStore from 'store/useStore.ts'
 import { ImageData, Position } from 'types/imageData.ts'
@@ -24,6 +26,9 @@ function Wall({
   onMouseUp,
   handleRemoveFromWall,
 }: WallProps) {
+  const { wallId } = useParams() as {
+    wallId: string
+  }
   const imageRefs = useRef<HTMLDivElement[]>([])
   const positions = useRef<Position[]>([])
   const offset = useRef({ x: 0, y: 0 })
@@ -34,6 +39,7 @@ function Wall({
   const wallRef = useRef<HTMLDivElement>(null)
   const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
   const selectedBackground = useStore((state) => state.selectedBackground)
+  const setSelectedBackground = useStore((state) => state.setSelectedBackground)
 
   useEffect(() => {
     positions.current = images.map((image) => ({ x: image.x, y: image.y }))
@@ -58,6 +64,12 @@ function Wall({
   useEffect(() => {
     setSelectedImageIndex(lastSelectedImageIndex)
   }, [lastSelectedImageIndex])
+
+  useEffect(() => {
+    ;(async () => {
+      setSelectedBackground(await getBackground(wallId))
+    })()
+  }, [wallId])
 
   function handleSelectImage(index: number) {
     selectedImageIndex.current = index
@@ -149,6 +161,7 @@ function Wall({
           width: WALL_WIDTH + 'px',
           height: WALL_HEIGHT + 'px',
           backgroundImage: `url(${selectedBackground})`,
+          backgroundColor: selectedBackground || 'white',
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
