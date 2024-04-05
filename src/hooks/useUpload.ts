@@ -4,8 +4,7 @@ import { v4 as uuid } from 'uuid'
 
 import { storage } from 'firebaseInstances'
 
-const MAX_SIZE = 2 * 1024 ** 2
-const MAX_FILES = 10
+import { MAX_FILES, MAX_SIZE } from '../consts'
 
 function useUpload() {
   const [filesUrls, setFilesUrls] = useState<string[]>([])

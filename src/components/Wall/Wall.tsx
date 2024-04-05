@@ -1,12 +1,11 @@
 import { MouseEvent, useEffect, useRef, useState } from 'react'
 
 import { MAX_ZOOM, MIN_ZOOM, WALL_HEIGHT, WALL_WIDTH, ZOOM_FACTOR } from 'consts'
+import useStore from 'store/useStore.ts'
 import { ImageData, Position } from 'types/imageData.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 import clamp from 'utils/math/clamp.ts'
-
-import useStore from '../../store/useStore.ts'
 
 import Image from './Image.tsx'
 
@@ -34,6 +33,7 @@ function Wall({
   const [scale, setScale] = useState(1)
   const wallRef = useRef<HTMLDivElement>(null)
   const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
+  const selectedBackground = useStore((state) => state.selectedBackground)
 
   useEffect(() => {
     positions.current = images.map((image) => ({ x: image.x, y: image.y }))
@@ -144,8 +144,12 @@ function Wall({
         <div onClick={zoomOut}>-</div>
       </div>
       <div
-        className={`bg-teal-50 absolute overflow-hidden origin-top-left`}
-        style={{ width: WALL_WIDTH + 'px', height: WALL_HEIGHT + 'px' }}
+        className={`bg-teal-50 absolute overflow-hidden origin-top-left bg-cover`}
+        style={{
+          width: WALL_WIDTH + 'px',
+          height: WALL_HEIGHT + 'px',
+          backgroundImage: `url(${selectedBackground})`,
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

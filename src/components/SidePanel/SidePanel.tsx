@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { ImageIcon, SettingsIcon, SlidersIcon, StickerIcon, PhotosIcon } from 'assets'
 import useStore from 'store/useStore.ts'
 
-import { Uploaded, Editing } from './sections'
+import { Uploaded, Editing, Backgrounds } from './sections'
 
 enum Sections {
   uploaded = 'photos',
@@ -58,6 +58,8 @@ function SidePanel() {
         return <Uploaded />
       case Sections.editing:
         return <Editing />
+      case Sections.backgrounds:
+        return <Backgrounds />
       default:
         return <></>
     }

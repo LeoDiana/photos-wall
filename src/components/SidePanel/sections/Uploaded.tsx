@@ -1,11 +1,11 @@
 import { ChangeEvent, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 
-import { addImage } from '../../../api'
-import useUpload from '../../../hooks/useUpload.ts'
-import useStore from '../../../store/useStore.ts'
-import { ImageData } from '../../../types/imageData.ts'
-import UploadWrapper from '../../UploadWrapper'
+import { addImage } from 'api'
+import UploadWrapper from 'components/UploadWrapper'
+import useUpload from 'hooks/useUpload.ts'
+import useStore from 'store/useStore.ts'
+import { ImageData } from 'types/imageData.ts'
 
 function isImageWithoutCoords(imageData: ImageData) {
   return imageData.x === null && imageData.y === null

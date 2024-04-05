@@ -12,6 +12,8 @@ interface State {
   setSelectedImageIndex: (index: number | null) => void
   selectedImageDataForEditingSection: Record<string, number> | null
   setSelectedImageDataForEditingSection: (data: Record<string, number> | null) => void
+  selectedBackground: string | null
+  setSelectedBackground: (src: string | null) => void
 }
 
 const useStore = create<State>()((set) => ({
@@ -27,6 +29,8 @@ const useStore = create<State>()((set) => ({
     set((state) => ({
       selectedImageDataForEditingSection: { ...state.selectedImageDataForEditingSection, ...data },
     })),
+  selectedBackground: null,
+  setSelectedBackground: (src) => set(() => ({ selectedBackground: src })),
 }))
 
 export default useStore
