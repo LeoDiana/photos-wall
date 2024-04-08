@@ -5,6 +5,24 @@ import getBackgrounds from 'api/getBackgrounds.ts'
 import updateBackground from 'api/updateBackground.ts'
 import useStore from 'store/useStore.ts'
 
+import {
+  BackgroundSectionContainer,
+  ColorBackground,
+  ColorBackgroundsContainer,
+  ImageBackground,
+} from './styles.ts'
+
+const backgroundColors = [
+  '#4f46e5',
+  '#eab308',
+  '#dc2626',
+  '#22c55e',
+  '#ffffff',
+  '#525252',
+  '#171717',
+  '#000000',
+]
+
 function Backgrounds() {
   const { wallId } = useParams() as {
     wallId: string
@@ -27,28 +45,16 @@ function Backgrounds() {
   }
 
   return (
-    <div className='flex gap-2 flex-wrap overflow-scroll h-full content-start'>
-      <div className='w-full pb-2'>
-        <div className='flex justify-between'>
-          <div className='w-9 h-9 bg-indigo-600' onClick={handleBackgroundChange('#4f46e5')} />
-          <div className='w-9 h-9 bg-yellow-500' onClick={handleBackgroundChange('#eab308')} />
-          <div className='w-9 h-9 bg-red-600' onClick={handleBackgroundChange('#dc2626')} />
-          <div className='w-9 h-9 bg-green-500' onClick={handleBackgroundChange('#22c55e')} />
-          <div className='w-9 h-9 bg-white' onClick={handleBackgroundChange('#ffffff')} />
-          <div className='w-9 h-9 bg-neutral-600' onClick={handleBackgroundChange('#525252')} />
-          <div className='w-9 h-9 bg-neutral-900' onClick={handleBackgroundChange('#171717')} />
-          <div className='w-9 h-9 bg-black' onClick={handleBackgroundChange('#000000')} />
-        </div>
-      </div>
+    <BackgroundSectionContainer>
+      <ColorBackgroundsContainer>
+        {backgroundColors.map((color) => (
+          <ColorBackground key={color} $color={color} onClick={handleBackgroundChange(color)} />
+        ))}
+      </ColorBackgroundsContainer>
       {backgrounds.map((bg) => (
-        <div
-          key={bg}
-          className='bg-cover w-80 h-52'
-          style={{ backgroundImage: `url(${bg})` }}
-          onClick={handleBackgroundChange(bg)}
-        />
+        <ImageBackground key={bg} $imgSrc={bg} onClick={handleBackgroundChange(bg)} />
       ))}
-    </div>
+    </BackgroundSectionContainer>
   )
 }
 

@@ -5,7 +5,10 @@ import { addImage } from 'api'
 import UploadWrapper from 'components/UploadWrapper'
 import useUpload from 'hooks/useUpload.ts'
 import useStore from 'store/useStore.ts'
+import { Button } from 'styles/buttonStyles.ts'
 import { ImageData } from 'types/imageData.ts'
+
+import { Loader, UploadedImage, UploadedImagesContainer } from './styles.ts'
 
 function isImageWithoutCoords(imageData: ImageData) {
   return imageData.x === null && imageData.y === null
@@ -42,29 +45,22 @@ function Uploaded() {
   return (
     <>
       <UploadWrapper onChange={handleUpload} multiple>
-        <div className='rounded-lg px-4 py-2 border-2 border-indigo-800 font-medium w-full bg-indigo-500 flex justify-center'>
-          Upload
-        </div>
+        <Button>Upload</Button>
       </UploadWrapper>
-      {urls.some((url) => url === 'loading') && (
-        <div className='font-medium fixed bottom-1 -translate-x-1/2 left-1/2'>LOADING...</div>
-      )}
-      <div className='flex gap-2 flex-wrap mt-4'>
+      {urls.some((url) => url === 'loading') && <Loader>LOADING...</Loader>}
+      <UploadedImagesContainer>
         {images.map(
           (image, index) =>
             isImageWithoutCoords(image) && (
-              <div
+              <UploadedImage
                 key={image.id}
-                className='h-[100px] w-[100px] bg-cover'
-                style={{
-                  backgroundImage: `url(${image.src})`,
-                }}
+                $imgSrc={image.src}
                 draggable
                 onDragEnd={() => setMovingImageIndex(index)}
               />
             ),
         )}
-      </div>
+      </UploadedImagesContainer>
     </>
   )
 }

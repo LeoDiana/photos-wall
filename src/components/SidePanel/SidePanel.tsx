@@ -4,6 +4,14 @@ import { ImageIcon, SettingsIcon, SlidersIcon, StickerIcon, PhotosIcon } from 'a
 import useStore from 'store/useStore.ts'
 
 import { Uploaded, Editing, Backgrounds } from './sections'
+import {
+  Container,
+  ExpandButton,
+  IconContainer,
+  SectionButton,
+  SectionButtonsContainer,
+  SectionContainer,
+} from './styles.ts'
 
 enum Sections {
   uploaded = 'photos',
@@ -52,6 +60,10 @@ function SidePanel() {
     }
   }, [selectedImageIndex])
 
+  function toggleExpanded() {
+    setIsExpanded((isExpanded) => !isExpanded)
+  }
+
   function renderSection() {
     switch (selectedSection) {
       case Sections.uploaded:
@@ -66,34 +78,29 @@ function SidePanel() {
   }
 
   return (
-    <div
-      className={`bg-neutral-800 h-screen fixed left-0 top-0 z-10 flex flex-row border border-l-1 border-neutral-900 ${isExpanded ? 'w-[430px]' : 'w-20'}`}
-    >
-      <div
-        className='bg-neutral-800 absolute right-0 translate-x-1/2 h-14 w-6 top-1/2 -translate-y-1/2 rounded-xl flex items-center p-1 justify-end select-none -z-10'
-        onClick={() => setIsExpanded((isExpanded) => !isExpanded)}
-      >
+    <Container $isExpanded={isExpanded}>
+      <ExpandButton onClick={toggleExpanded}>
         <p>{isExpanded ? '<' : '>'}</p>
-      </div>
-      <div className='bg-neutral-900 w-20 h-screen border border-l-1 border-neutral-800'>
+      </ExpandButton>
+      <SectionButtonsContainer>
         {sections.map(({ id, title, icon: Icon }) => (
-          <div
+          <SectionButton
             key={id}
-            className={`w-20 h-20 text-xs flex flex-col items-center justify-center ${selectedSection === id && isExpanded && 'bg-neutral-800'}`}
+            $shouldBeHighlighted={selectedSection === id && isExpanded}
             onClick={() => {
               setSelectedSection(id)
               setIsExpanded(true)
             }}
           >
-            <div className='w-[40px] h-[40px]'>
+            <IconContainer>
               <Icon />
-            </div>
+            </IconContainer>
             {title}
-          </div>
+          </SectionButton>
         ))}
-      </div>
-      {isExpanded && <div className='grow p-4 pb-0'>{renderSection()}</div>}
-    </div>
+      </SectionButtonsContainer>
+      {isExpanded && <SectionContainer>{renderSection()}</SectionContainer>}
+    </Container>
   )
 }
 

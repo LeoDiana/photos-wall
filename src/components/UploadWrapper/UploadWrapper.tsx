@@ -1,5 +1,7 @@
 import { ChangeEvent, useId } from 'react'
 
+import { Input } from './styles.ts'
+
 interface UploadContainerProps {
   children: JSX.Element
   onChange: (event: ChangeEvent<HTMLInputElement>) => void
@@ -11,14 +13,7 @@ function UploadWrapper({ children, onChange, multiple = false }: UploadContainer
 
   return (
     <>
-      <input
-        type='file'
-        accept='.jpg,.jpeg,.png'
-        multiple={multiple}
-        className='hidden'
-        id={id}
-        onChange={onChange}
-      />
+      <Input type='file' accept='.jpg,.jpeg,.png' multiple={multiple} id={id} onChange={onChange} />
       <label htmlFor={id}>{children}</label>
     </>
   )

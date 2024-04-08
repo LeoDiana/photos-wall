@@ -25,7 +25,7 @@ export interface ImageData {
   borderHeight: number
   borderOffsetX: number
   borderOffsetY: number
-  frameStyle: FrameStyles
+  frameStyle: FrameStyle
 }
 
 export interface Position {
@@ -33,12 +33,12 @@ export interface Position {
   y: number | null
 }
 
-export enum FrameStyles {
+export enum FrameStyle {
   none = 'none',
   border = 'border',
 }
 
-export enum Sides {
+export enum Side {
   top = 'top',
   right = 'right',
   bottom = 'bottom',

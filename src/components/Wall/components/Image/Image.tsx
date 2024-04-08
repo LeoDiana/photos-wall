@@ -10,7 +10,7 @@ import {
   MIN_BORDER_WIDTH,
 } from 'consts'
 import useStore from 'store/useStore.ts'
-import { DefinedPosition, Dimensions, FrameStyles, ImageData, Sides } from 'types/imageData.ts'
+import { DefinedPosition, Dimensions, ImageData, Side } from 'types/imageData.ts'
 import {
   calcCornersCoords,
   clamp,
@@ -21,9 +21,19 @@ import {
   rotateVector,
 } from 'utils/math'
 
+import ResizeHelper from '../ResizeHelper/ResizeHelper.tsx'
+import RotateTool from '../RotateTool/RotateTool.tsx'
+
 import { calcRescaledDimensions, getCornersDif, getScalingVector } from './rescaleUtils.ts'
-import ResizeHelper from './ResizeHelper.tsx'
-import RotateTool from './RotateTool.tsx'
+import {
+  BorderContainer,
+  ImageContainer,
+  ImageElement,
+  ImageInsideBorder,
+  ImageInsideBorderContainer,
+  InnerImageContainer,
+  StyledBorder,
+} from './styles.ts'
 
 interface ImageProps extends ImageData {
   isSelected: boolean
@@ -59,6 +69,7 @@ function Image(
   const [isEditingMode, setIsEditingMode] = useState(false)
 
   const borderRef = useRef<HTMLDivElement>(null)
+  const styledBorderRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
   const imageInBorderRef = useRef<HTMLDivElement>(null)
 
@@ -149,6 +160,8 @@ function Image(
   function changeBorderSize({ width, height }: Dimensions, isFinished = true) {
     borderRef.current!.style.width = `${width}px`
     borderRef.current!.style.height = `${height}px`
+    styledBorderRef.current!.style.width = `${width}px`
+    styledBorderRef.current!.style.height = `${height}px`
     imageRef.current!.style.transformOrigin = `${width / 2}px ${height / 2}px`
     imageInBorderRef.current!.style.transformOrigin = `${width / 2}px ${height / 2}px`
 
@@ -386,7 +399,7 @@ function Image(
   }: {
     difX: number
     difY: number
-    movingSides: Sides[]
+    movingSides: Side[]
   }) {
     const { width: widthDif, height: heightDif } = getCornersDif(
       difX,
@@ -405,8 +418,8 @@ function Image(
     })
     currentScale.current = scaleFactor
 
-    const signX = movingSides.includes(Sides.left) ? 1 : 0
-    const signY = movingSides.includes(Sides.top) ? 1 : 0
+    const signX = movingSides.includes(Side.left) ? 1 : 0
+    const signY = movingSides.includes(Side.top) ? 1 : 0
 
     const newXoffset = imageOffset.current.x + (imageDimensions.current.width - actualWidth) * signX
     const newYoffset =
@@ -480,14 +493,14 @@ function Image(
   }: {
     difX: number
     difY: number
-    movingSides: Sides[]
+    movingSides: Side[]
   }) {
     const { width: difW, height: difH } = getCornersDif(difX, -difY, movingSides)
 
     const suggestedWidth =
-      borderDimensions.current.width + difW * (movingSides.includes(Sides.left) ? -1 : 1)
+      borderDimensions.current.width + difW * (movingSides.includes(Side.left) ? -1 : 1)
     const suggestedHeight =
-      borderDimensions.current.height + difH * (movingSides.includes(Sides.top) ? -1 : 1)
+      borderDimensions.current.height + difH * (movingSides.includes(Side.top) ? -1 : 1)
 
     const newWidth = clamp(MIN_BORDER_WIDTH, MAX_BORDER_WIDTH, suggestedWidth)
     const newHeight = clamp(MIN_BORDER_HEIGHT, MAX_BORDER_HEIGHT, suggestedHeight)
@@ -498,9 +511,9 @@ function Image(
     const actualDifY = borderDimensions.current.height - newHeight
 
     const newOffsetX =
-      borderOffset.current.x + actualDifX * (movingSides.includes(Sides.left) ? 1 : 0)
+      borderOffset.current.x + actualDifX * (movingSides.includes(Side.left) ? 1 : 0)
     const newOffsetY =
-      borderOffset.current.y + actualDifY * (movingSides.includes(Sides.top) ? 1 : 0)
+      borderOffset.current.y + actualDifY * (movingSides.includes(Side.top) ? 1 : 0)
 
     changeBorderPosition({ x: newOffsetX, y: newOffsetY }, false)
 
@@ -542,17 +555,12 @@ function Image(
   }
 
   return (
-    <div className='absolute select-none flex' ref={ref}>
-      <div
-        className='box-content cursor-move'
-        style={{
-          zIndex: order,
-          width: borderWidth,
-          height: borderHeight,
-        }}
+    <ImageContainer ref={ref}>
+      <BorderContainer
+        ref={borderRef}
+        $order={order}
         onMouseDownCapture={onSelect}
         onDoubleClick={toggleEditingMode}
-        ref={borderRef}
       >
         {isSelected && (
           <ResizeHelper
@@ -571,76 +579,39 @@ function Image(
             }}
           />
         )}
-        <div
-          className={`${isEditingMode ? 'overflow-visible' : 'overflow-hidden'}`}
-          style={{ width: 'inherit', height: 'inherit' }}
-        >
-          <div
-            style={{
-              width: 'inherit',
-              height: 'inherit',
-            }}
+        <InnerImageContainer $isEditingMode={isEditingMode}>
+          <ImageInsideBorderContainer>
+            <ImageInsideBorder ref={imageInBorderRef} $imgSrc={src} />
+          </ImageInsideBorderContainer>
+          <ImageElement
+            ref={imageRef}
+            $imgSrc={src}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
           >
-            <div
-              style={{
-                width: 'inherit',
-                height: 'inherit',
-                overflow: 'hidden',
-                position: 'absolute',
-              }}
-            >
-              <div
-                ref={imageInBorderRef}
-                style={{
-                  position: 'relative',
-                  background: `url(${src}`,
-                  backgroundSize: `contain`,
-                  width: 'inherit',
-                  height: 'inherit',
+            {isEditingMode && (
+              <ResizeHelper
+                onScaling={handleScaling}
+                onScalingFinished={handleScalingFinished}
+                variant='image'
+              />
+            )}
+            {isEditingMode && (
+              <RotateTool
+                onRotating={handleRotating}
+                onRotatingFinished={handleRotatingFinished}
+                center={{
+                  x: rect.x! + rect.width / 2,
+                  y: rect.y! + rect.height / 2,
                 }}
-              ></div>
-            </div>
-            <div
-              className='relative w-fit h-fit opacity-50'
-              style={{
-                background: `url(${src}`,
-                backgroundSize: 'contain',
-              }}
-              ref={imageRef}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-            >
-              {isEditingMode && (
-                <ResizeHelper
-                  onScaling={handleScaling}
-                  onScalingFinished={handleScalingFinished}
-                  variant='image'
-                />
-              )}
-              {isEditingMode && (
-                <RotateTool
-                  onRotating={handleRotating}
-                  onRotatingFinished={handleRotatingFinished}
-                  center={{
-                    x: rect.x! + rect.width / 2,
-                    y: rect.y! + rect.height / 2,
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-        <div
-          className={`absolute top-0 left-0 ${frameStyle === FrameStyles.border ? 'border-8' : 'border-0'}`}
-          style={{
-            zIndex: order,
-            width: borderWidth,
-            height: borderHeight,
-          }}
-        ></div>
-      </div>
-    </div>
+              />
+            )}
+          </ImageElement>
+        </InnerImageContainer>
+        <StyledBorder ref={styledBorderRef} $order={order} $variant={frameStyle} />
+      </BorderContainer>
+    </ImageContainer>
   )
 }
 

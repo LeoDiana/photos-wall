@@ -2,14 +2,17 @@ import { MouseEvent, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import getBackground from 'api/getBackground.ts'
-import { MAX_ZOOM, MIN_ZOOM, WALL_HEIGHT, WALL_WIDTH, ZOOM_FACTOR } from 'consts'
+import { MAX_ZOOM, MIN_ZOOM, ZOOM_FACTOR } from 'consts'
 import useStore from 'store/useStore.ts'
 import { ImageData, Position } from 'types/imageData.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 import clamp from 'utils/math/clamp.ts'
 
-import Image from './Image.tsx'
+import { ZoomMinusIcon, ZoomPlusIcon } from '../../assets'
+
+import Image from './components/Image/Image.tsx'
+import { WallElement, ZoomBackdrop, ZoomContainer, ZoomIcon } from './styles.ts'
 
 interface WallProps {
   images: ImageData[]
@@ -151,18 +154,17 @@ function Wall({
 
   return (
     <>
-      <div className='fixed right-2 top-1/2 text-3xl text-pink-600 z-[99999]'>
-        <div onClick={zoomIn}>+</div>
-        <div onClick={zoomOut}>-</div>
-      </div>
-      <div
-        className={`bg-teal-50 absolute overflow-hidden origin-top-left bg-cover`}
-        style={{
-          width: WALL_WIDTH + 'px',
-          height: WALL_HEIGHT + 'px',
-          backgroundImage: `url(${selectedBackground})`,
-          backgroundColor: selectedBackground || 'white',
-        }}
+      <ZoomContainer>
+        <ZoomBackdrop />
+        <ZoomIcon onClick={zoomIn} title='zoom in'>
+          <ZoomPlusIcon />
+        </ZoomIcon>
+        <ZoomIcon onClick={zoomOut} title='zoom out'>
+          <ZoomMinusIcon />
+        </ZoomIcon>
+      </ZoomContainer>
+      <WallElement
+        $bg={selectedBackground}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -196,7 +198,7 @@ function Wall({
               />
             ),
         )}
-      </div>
+      </WallElement>
     </>
   )
 }

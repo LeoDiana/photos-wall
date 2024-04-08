@@ -7,6 +7,7 @@ import { getImages, updateImageData } from './api'
 import deleteImage from './api/deleteImage.ts'
 import SidePanel from './components/SidePanel'
 import useStore from './store/useStore.ts'
+import { MainContainer, Title, WallContainer } from './styles.ts'
 
 function App() {
   const { wallId } = useParams() as {
@@ -74,10 +75,10 @@ function App() {
   }
 
   return (
-    <div className='relative'>
-      <h1 className='text-3xl text-center mt-2'>My wall</h1>
+    <MainContainer>
+      <Title>My wall</Title>
       <SidePanel />
-      <div className='w-screen h-[500px] overflow-scroll' ref={wallContainerRef}>
+      <WallContainer ref={wallContainerRef}>
         <Wall
           images={images}
           onImagePositionChange={handleImagePositionChange}
@@ -86,8 +87,8 @@ function App() {
           handleRemoveFromWall={handleRemoveFromWall}
           handleDeleteImage={handleDeleteImage}
         />
-      </div>
-    </div>
+      </WallContainer>
+    </MainContainer>
   )
 }
 

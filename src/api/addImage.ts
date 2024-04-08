@@ -2,7 +2,7 @@ import { addDoc, collection, getDoc } from 'firebase/firestore'
 
 import { DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH } from 'consts'
 import { db } from 'firebaseInstances.ts'
-import { FrameStyles, ImageData } from 'types/imageData.ts'
+import { FrameStyle, ImageData } from 'types/imageData.ts'
 import calculateScaleFactor from 'utils/math/calculateScaleFactor.ts'
 
 async function getImageDimensions(src: string): Promise<{ width: number; height: number }> {
@@ -42,7 +42,7 @@ async function addImage(src: string, wallId = 'photos') {
     yOffset: null,
     imageRotation: 0,
     borderRotation: 0,
-    frameStyle: FrameStyles.none,
+    frameStyle: FrameStyle.none,
     scale: calculateScaleFactor(dimensions.width, dimensions.height, 250, 250),
   } satisfies Omit<ImageData, 'id'>)
   const newImageSnapshot = await getDoc(newImageRef)

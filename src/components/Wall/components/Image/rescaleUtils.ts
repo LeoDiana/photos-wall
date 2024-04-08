@@ -1,5 +1,5 @@
 import { MAX_SCALE } from 'consts'
-import { DefinedPosition, Dimensions, Sides } from 'types/imageData.ts'
+import { DefinedPosition, Dimensions, Side } from 'types/imageData.ts'
 import { clamp, rotateVector, calculateScaleFactor } from 'utils/math'
 
 export function calcRescaledDimensions(
@@ -41,40 +41,40 @@ export function calcRescaledDimensions(
 export function getCornersDif(
   difX: number,
   difY: number,
-  movingSides: Sides[],
+  movingSides: Side[],
   scalingVector: DefinedPosition = { x: 1, y: 1 },
 ) {
   const nwCornerDif = { x: 0, y: 0 }
   const seCornerDif = { x: 0, y: 0 }
 
-  if (movingSides.includes(Sides.top)) {
+  if (movingSides.includes(Side.top)) {
     nwCornerDif.y = scalingVector.y * difY
   }
-  if (movingSides.includes(Sides.right)) {
+  if (movingSides.includes(Side.right)) {
     seCornerDif.x = scalingVector.x * difX
   }
-  if (movingSides.includes(Sides.bottom)) {
+  if (movingSides.includes(Side.bottom)) {
     seCornerDif.y = scalingVector.y * difY
   }
-  if (movingSides.includes(Sides.left)) {
+  if (movingSides.includes(Side.left)) {
     nwCornerDif.x = scalingVector.x * difX
   }
 
   return { width: nwCornerDif.x + seCornerDif.x, height: nwCornerDif.y + seCornerDif.y }
 }
 
-export function getScalingVector(movingSides: Sides[], angle: number) {
+export function getScalingVector(movingSides: Side[], angle: number) {
   const vector = { x: 0, y: 0 }
-  if (movingSides.includes(Sides.top)) {
+  if (movingSides.includes(Side.top)) {
     vector.y = 1
   }
-  if (movingSides.includes(Sides.right)) {
+  if (movingSides.includes(Side.right)) {
     vector.x = 1
   }
-  if (movingSides.includes(Sides.bottom)) {
+  if (movingSides.includes(Side.bottom)) {
     vector.y = -1
   }
-  if (movingSides.includes(Sides.left)) {
+  if (movingSides.includes(Side.left)) {
     vector.x = -1
   }
 
