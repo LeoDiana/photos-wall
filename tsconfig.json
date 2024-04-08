@@ -24,7 +24,8 @@
     "baseUrl": "./src"
   },
   "include": [
-    "src"
+    "src",
+    "types",
   ],
   "references": [
     {
