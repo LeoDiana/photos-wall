@@ -5,6 +5,7 @@ import { ImageData } from 'types/imageData.ts'
 interface State {
   images: ImageData[]
   setImages: (images: ImageData[]) => void
+  addImage: (image: ImageData) => void
   deleteImage: (id: string) => void
   movingImageIndex: number | null // index of image when user moves image from uploaded section
   setMovingImageIndex: (index: number | null) => void
@@ -19,6 +20,7 @@ interface State {
 const useStore = create<State>()((set) => ({
   images: [],
   setImages: (images) => set(() => ({ images: images })),
+  addImage: (image) => set((state) => ({ images: [...state.images, image] })),
   deleteImage: (id) => set((state) => ({ images: state.images.filter((img) => img.id !== id) })),
   movingImageIndex: null,
   setMovingImageIndex: (index) => set(() => ({ movingImageIndex: index })),

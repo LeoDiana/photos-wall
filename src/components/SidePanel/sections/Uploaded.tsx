@@ -21,7 +21,7 @@ function Uploaded() {
   const { handleChange, urls, clear } = useUpload()
 
   const images = useStore((state) => state.images)
-  const setImages = useStore((state) => state.setImages)
+  const addImageToStore = useStore((state) => state.addImage)
   const setMovingImageIndex = useStore((state) => state.setMovingImageIndex)
 
   async function handleUpload(event: ChangeEvent<HTMLInputElement>) {
@@ -30,11 +30,14 @@ function Uploaded() {
 
   useEffect(() => {
     ;(async () => {
+      let index = 0
       for (const url of urls) {
-        if (url !== 'loading') {
+        if (url !== 'loading' && url !== 'added') {
           const photo = await addImage(url, wallId)
-          setImages([...images, photo])
+          addImageToStore(photo)
+          urls[index] = 'added'
         }
+        index++
       }
       if (urls.length > 0 && urls.every((url) => url !== 'loading')) {
         clear()
