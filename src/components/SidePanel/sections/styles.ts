@@ -19,6 +19,8 @@ export const ColorBackground = styled.div<{
 ])
 
 export const ColorBackgroundsContainer = tw.div`w-full pb-2 flex justify-between`
+export const ErrorMessage = tw.div`font-medium text-center mt-2 text-red-400`
+
 export const Frame = styled.div<{
   $imgSrc: string | null
   $variant: FrameStyle
@@ -27,12 +29,11 @@ export const Frame = styled.div<{
   frameStyles[$variant],
   withBackground({ imgSrc: $imgSrc }),
 ])
-
 export const FramesContainer = tw.div`flex gap-2`
+
 export const ImageBackground = styled.div<{
   $imgSrc: string | null
 }>(({ $imgSrc }) => [tw`bg-cover w-80 h-52`, withBackground({ imgSrc: $imgSrc })])
-
 export const Loader = tw.div`font-medium text-center mt-2`
 
 export const UploadedImage = styled.div<{

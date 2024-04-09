@@ -8,7 +8,7 @@ import useStore from 'store/useStore.ts'
 import { Button } from 'styles/buttonStyles.ts'
 import { ImageData } from 'types/imageData.ts'
 
-import { Loader, UploadedImage, UploadedImagesContainer } from './styles.ts'
+import { ErrorMessage, Loader, UploadedImage, UploadedImagesContainer } from './styles.ts'
 
 function isImageWithoutCoords(imageData: ImageData) {
   return imageData.x === null && imageData.y === null
@@ -18,7 +18,7 @@ function Uploaded() {
   const { wallId } = useParams() as {
     wallId: string
   }
-  const { handleChange, urls, clear } = useUpload()
+  const { handleChange, urls, clear, errorMessage } = useUpload()
 
   const images = useStore((state) => state.images)
   const addImageToStore = useStore((state) => state.addImage)
@@ -51,6 +51,7 @@ function Uploaded() {
         <Button>Upload</Button>
       </UploadWrapper>
       {urls.some((url) => url === 'loading') && <Loader>LOADING...</Loader>}
+      {Boolean(errorMessage) && <ErrorMessage>{errorMessage}</ErrorMessage>}
       <UploadedImagesContainer>
         {images.map(
           (image, index) =>

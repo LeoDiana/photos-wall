@@ -7,9 +7,11 @@ import { storage } from 'firebaseInstances'
 import { MAX_FILES, MAX_SIZE } from '../consts'
 
 function useUpload() {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [filesUrls, setFilesUrls] = useState<string[]>([])
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    setErrorMessage(null)
     const newUrls = Array.from({
       length: Math.min(MAX_FILES - filesUrls.length, event.target.files!.length),
     }).fill('loading') as string[]
@@ -23,7 +25,7 @@ function useUpload() {
       }
 
       if (file.size > MAX_SIZE) {
-        console.log('Big file!!') // TODO handle big files
+        setErrorMessage('File is more than 3mb')
         setFilesUrls((urls) => urls.filter((_, i) => index !== i))
         continue
       }
@@ -50,6 +52,7 @@ function useUpload() {
     urls: filesUrls,
     handleChange,
     handleRemove,
+    errorMessage,
     clear,
   }
 }
