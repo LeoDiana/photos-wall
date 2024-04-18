@@ -7,7 +7,7 @@ import { getImages, updateImageData } from './api'
 import deleteImage from './api/deleteImage.ts'
 import SidePanel from './components/SidePanel'
 import useStore from './store/useStore.ts'
-import { MainContainer, Title, WallContainer } from './styles.ts'
+import { MainContainer, ReturnToEditModeButton, Title, WallContainer } from './styles.ts'
 
 function App() {
   const { wallId } = useParams() as {
@@ -20,6 +20,9 @@ function App() {
 
   const movingImageIndex = useStore((state) => state.movingImageIndex)
   const setMovingImageIndex = useStore((state) => state.setMovingImageIndex)
+
+  const isViewingMode = useStore((state) => state.isViewingMode)
+  const setIsViewingMode = useStore((state) => state.setIsViewingMode)
 
   const wallContainerRef = useRef<HTMLDivElement>(null)
 
@@ -77,7 +80,13 @@ function App() {
   return (
     <MainContainer>
       <Title>My wall</Title>
-      <SidePanel />
+      {isViewingMode ? (
+        <ReturnToEditModeButton onClick={() => setIsViewingMode(false)}>
+          &#10132; Edit mode
+        </ReturnToEditModeButton>
+      ) : (
+        <SidePanel />
+      )}
       <WallContainer ref={wallContainerRef}>
         <Wall
           images={images}

@@ -54,6 +54,8 @@ function SidePanel() {
   const [selectedSection, setSelectedSection] = useState(Sections.uploaded)
   const selectedImageIndex = useStore((state) => state.selectedImageIndex)
 
+  const setIsViewingMode = useStore((state) => state.setIsViewingMode)
+
   useEffect(() => {
     if (Number.isInteger(selectedImageIndex)) {
       setSelectedSection(Sections.editing)
@@ -73,7 +75,11 @@ function SidePanel() {
       case Sections.backgrounds:
         return <Backgrounds />
       default:
-        return <></>
+        return (
+          <>
+            <p onClick={() => setIsViewingMode(true)}>Go to viewing mode</p>
+          </>
+        )
     }
   }
 

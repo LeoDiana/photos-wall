@@ -15,6 +15,8 @@ interface State {
   setSelectedImageDataForEditingSection: (data: Record<string, number> | null) => void
   selectedBackground: string | null
   setSelectedBackground: (src: string | null) => void
+  isViewingMode: boolean
+  setIsViewingMode: (isViewingMode: boolean) => void
 }
 
 const useStore = create<State>()((set) => ({
@@ -33,6 +35,8 @@ const useStore = create<State>()((set) => ({
     })),
   selectedBackground: null,
   setSelectedBackground: (src) => set(() => ({ selectedBackground: src })),
+  isViewingMode: false,
+  setIsViewingMode: (isViewingMode) => set(() => ({ isViewingMode })),
 }))
 
 export default useStore
