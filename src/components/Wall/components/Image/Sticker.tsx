@@ -1,6 +1,6 @@
 import { ForwardedRef, forwardRef } from 'react'
 
-import { ImageData } from 'types/imageData.ts'
+import { StickerData } from 'types/imageData.ts'
 
 import ResizeHelper from '../ResizeHelper/ResizeHelper.tsx'
 import RotateTool from '../RotateTool/RotateTool.tsx'
@@ -12,38 +12,31 @@ import {
   ImageInsideBorder,
   ImageInsideBorderContainer,
   InnerImageContainer,
-  StyledBorder,
 } from './styles.ts'
 import useImage from './useImage.ts'
 
-interface ImageProps extends ImageData {
+interface StickerProps extends StickerData {
   isSelected: boolean
   onSelect: () => void
 }
 
-function Image(props: ImageProps, ref: ForwardedRef<HTMLDivElement>) {
-  const { src, onSelect, isSelected = false, order = 0, frameStyle } = props
+function Sticker(props: StickerProps, ref: ForwardedRef<HTMLDivElement>) {
+  const { src, onSelect, isSelected = false, order = 0 } = props
 
   const {
     isEditingMode,
     toggleEditingMode,
-    handleBorderResize,
-    handleBorderResizeFinished,
     handleBorderRotating,
     handleBorderRotatingFinished,
-    handleScaling,
-    handleScalingFinished,
-    handleRotating,
-    handleRotatingFinished,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
     borderCenter,
-    imageCenter,
     borderRef,
     imageInBorderRef,
     imageRef,
-    styledBorderRef,
+    handleStickerResize,
+    handleStickerResizeFinished,
   } = useImage(props)
 
   return (
@@ -56,8 +49,8 @@ function Image(props: ImageProps, ref: ForwardedRef<HTMLDivElement>) {
       >
         {isSelected && (
           <ResizeHelper
-            onScaling={handleBorderResize}
-            onScalingFinished={handleBorderResizeFinished}
+            onScaling={handleStickerResize}
+            onScalingFinished={handleStickerResizeFinished}
             variant='border'
           />
         )}
@@ -78,27 +71,11 @@ function Image(props: ImageProps, ref: ForwardedRef<HTMLDivElement>) {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-          >
-            {isEditingMode && (
-              <ResizeHelper
-                onScaling={handleScaling}
-                onScalingFinished={handleScalingFinished}
-                variant='image'
-              />
-            )}
-            {isEditingMode && (
-              <RotateTool
-                onRotating={handleRotating}
-                onRotatingFinished={handleRotatingFinished}
-                center={imageCenter}
-              />
-            )}
-          </ImageElement>
+          ></ImageElement>
         </InnerImageContainer>
-        <StyledBorder ref={styledBorderRef} $order={order} $variant={frameStyle} />
       </BorderContainer>
     </ImageContainer>
   )
 }
 
-export default forwardRef(Image)
+export default forwardRef(Sticker)

@@ -1,8 +1,6 @@
-import { ImageData } from 'types/imageData.ts'
-
 import compareByOrder from './compareByOrder.ts'
 
-function getSimplifiedImageOrders(images: ImageData[]) {
+function getSimplifiedImageOrders(images: { order: number }[]) {
   return images
     .map((img, index) => ({ index, order: img.order }))
     .sort(compareByOrder)

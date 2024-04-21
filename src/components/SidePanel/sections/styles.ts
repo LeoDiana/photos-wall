@@ -36,6 +36,19 @@ export const ImageBackground = styled.div<{
 }>(({ $imgSrc }) => [tw`bg-cover w-80 h-52`, withBackground({ imgSrc: $imgSrc })])
 export const Loader = tw.div`font-medium text-center mt-2`
 
+export const StickerElement = styled.div<{
+  $imgSrc: string | null
+  $width: number
+  $height: number
+}>(({ $imgSrc, $width, $height }) => [
+  tw`bg-cover`,
+  withBackground({ imgSrc: $imgSrc }),
+  css`
+    width: ${$width}px;
+    height: ${$height}px;
+  `,
+])
+
 export const UploadedImage = styled.div<{
   $imgSrc: string | null
 }>(({ $imgSrc }) => [tw`h-[100px] w-[100px] bg-cover`, withBackground({ imgSrc: $imgSrc })])

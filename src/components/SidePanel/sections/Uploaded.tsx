@@ -6,7 +6,7 @@ import UploadWrapper from 'components/UploadWrapper'
 import useUpload from 'hooks/useUpload.ts'
 import useStore from 'store/useStore.ts'
 import { Button } from 'styles/buttonStyles.ts'
-import { ImageData } from 'types/imageData.ts'
+import { ImageData, ImageType } from 'types/imageData.ts'
 
 import { ErrorMessage, Loader, UploadedImage, UploadedImagesContainer } from './styles.ts'
 
@@ -55,7 +55,8 @@ function Uploaded() {
       <UploadedImagesContainer>
         {images.map(
           (image, index) =>
-            isImageWithoutCoords(image) && (
+            isImageWithoutCoords(image) &&
+            image.type === ImageType.image && (
               <UploadedImage
                 key={image.id}
                 $imgSrc={image.src}

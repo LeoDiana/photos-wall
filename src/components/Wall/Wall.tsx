@@ -2,20 +2,20 @@ import { MouseEvent, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import getBackground from 'api/getBackground.ts'
+import { ZoomMinusIcon, ZoomPlusIcon } from 'assets'
 import { MAX_ZOOM, MIN_ZOOM, ZOOM_FACTOR } from 'consts'
 import useStore from 'store/useStore.ts'
-import { ImageData, Position } from 'types/imageData.ts'
+import { ImageData, ImageType, Position, StickerData } from 'types/imageData.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 import clamp from 'utils/math/clamp.ts'
 
-import { ZoomMinusIcon, ZoomPlusIcon } from '../../assets'
-
 import Image from './components/Image/Image.tsx'
+import Sticker from './components/Image/Sticker.tsx'
 import { WallElement, ZoomBackdrop, ZoomContainer, ZoomIcon } from './styles.ts'
 
 interface WallProps {
-  images: ImageData[]
+  images: (ImageData | StickerData)[]
   onImagePositionChange: (id: string, x: number | null, y: number | null) => void
   bringToFront: (id: string) => void
   onMouseUp: (e: MouseEvent<HTMLDivElement>) => void
@@ -185,18 +185,26 @@ function Wall({
         }}
         tabIndex={0}
       >
-        {images.map(
-          (img, index) =>
-            isImageWithCoords(img) && (
-              <Image
-                key={index}
-                ref={(element) => (imageRefs.current[index] = element as HTMLDivElement)}
-                {...img}
-                order={imageOrders[index]}
-                onSelect={() => handleSelectImage(index)}
-                isSelected={lastSelectedImageIndex === index}
-              />
-            ),
+        {images.map((img, index) =>
+          img.type === ImageType.image && isImageWithCoords(img) ? (
+            <Image
+              key={index}
+              ref={(element) => (imageRefs.current[index] = element as HTMLDivElement)}
+              {...img}
+              order={imageOrders[index]}
+              onSelect={() => handleSelectImage(index)}
+              isSelected={lastSelectedImageIndex === index}
+            />
+          ) : img.type === ImageType.sticker ? (
+            <Sticker
+              key={index}
+              ref={(element) => (imageRefs.current[index] = element as HTMLDivElement)}
+              {...img}
+              order={imageOrders[index]}
+              onSelect={() => handleSelectImage(index)}
+              isSelected={lastSelectedImageIndex === index}
+            />
+          ) : null,
         )}
       </WallElement>
     </>

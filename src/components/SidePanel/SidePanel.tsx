@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { ImageIcon, SettingsIcon, SlidersIcon, StickerIcon, PhotosIcon } from 'assets'
 import useStore from 'store/useStore.ts'
 
-import { Uploaded, Editing, Backgrounds } from './sections'
+import { Uploaded, Editing, Backgrounds, Stickers } from './sections'
 import {
   Container,
   ExpandButton,
@@ -74,6 +74,8 @@ function SidePanel() {
         return <Editing />
       case Sections.backgrounds:
         return <Backgrounds />
+      case Sections.stickers:
+        return <Stickers />
       default:
         return (
           <>

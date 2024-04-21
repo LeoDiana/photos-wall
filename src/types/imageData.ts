@@ -26,6 +26,7 @@ export interface ImageData {
   borderOffsetX: number
   borderOffsetY: number
   frameStyle: FrameStyle
+  type: ImageType.image
 }
 
 export interface Position {
@@ -33,9 +34,33 @@ export interface Position {
   y: number | null
 }
 
+export type StickerData = Pick<
+  ImageData,
+  | 'id'
+  | 'src'
+  | 'x'
+  | 'y'
+  | 'originalHeight'
+  | 'originalWidth'
+  | 'order'
+  | 'scale'
+  | 'imageRotation'
+> & { type: ImageType.sticker }
+
+export interface StickerFromGallery extends Dimensions {
+  id: string
+  src: string
+  scale: number
+}
+
 export enum FrameStyle {
   none = 'none',
   border = 'border',
+}
+
+export enum ImageType {
+  image = 'image',
+  sticker = 'sticker',
 }
 
 export enum Side {

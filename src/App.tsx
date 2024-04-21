@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import Wall from 'components/Wall/Wall.tsx'
 
 import { getImages, updateImageData } from './api'
+import addSticker from './api/addSticker.ts'
 import deleteImage from './api/deleteImage.ts'
 import SidePanel from './components/SidePanel'
 import useStore from './store/useStore.ts'
@@ -16,8 +17,12 @@ function App() {
 
   const images = useStore((state) => state.images)
   const setImages = useStore((state) => state.setImages)
+  const updateImage = useStore((state) => state.updateImage)
   const deleteImageFromStore = useStore((state) => state.deleteImage)
+  const addImageToStore = useStore((state) => state.addImage)
 
+  const movingSticker = useStore((state) => state.movingSticker)
+  const setMovingSticker = useStore((state) => state.setMovingSticker)
   const movingImageIndex = useStore((state) => state.movingImageIndex)
   const setMovingImageIndex = useStore((state) => state.setMovingImageIndex)
 
@@ -45,26 +50,32 @@ function App() {
 
   function handleImagePositionChange(id: string, x: number | null, y: number | null) {
     updateImageData(id, wallId, { x, y })
-    setImages(images.map((img) => (img.id === id ? { ...img, x, y, order: Date.now() } : img)))
+    updateImage(id, { x, y, order: Date.now() })
   }
 
   function bringToFront(id: string) {
     setImages(images.map((img) => (img.id === id ? { ...img, order: Date.now() } : img)))
   }
 
-  function handleMoveImageToWall(event: MouseEvent<HTMLDivElement>) {
-    if (movingImageIndex !== null) {
-      const wall = (event.target as HTMLDivElement).getBoundingClientRect()
-      const selectedImageId = images[movingImageIndex].id
-      const mouseX = event.clientX - wall.x
-      const mouseY = event.clientY - wall.y
+  async function handleMoveImageToWall(event: MouseEvent<HTMLDivElement>) {
+    const wall = (event.target as HTMLDivElement).getBoundingClientRect()
+    const mouseX = event.clientX - wall.x
+    const mouseY = event.clientY - wall.y
+    const { x, y } = {
+      x: mouseX,
+      y: mouseY,
+    }
 
-      const { x, y } = {
-        x: mouseX,
-        y: mouseY,
-      }
-      handleImagePositionChange(selectedImageId, x, y)
+    if (movingImageIndex !== null) {
+      handleImagePositionChange(images[movingImageIndex].id, x, y)
       setMovingImageIndex(null)
+    }
+
+    if (movingSticker !== null) {
+      const photo = await addSticker(wallId, movingSticker)
+      addImageToStore(photo)
+      handleImagePositionChange(photo.id, x, y)
+      setMovingSticker(null)
     }
   }
 
@@ -94,7 +105,6 @@ function App() {
           bringToFront={bringToFront}
           onMouseUp={handleMoveImageToWall}
           handleRemoveFromWall={handleRemoveFromWall}
-          handleDeleteImage={handleDeleteImage}
         />
       </WallContainer>
     </MainContainer>

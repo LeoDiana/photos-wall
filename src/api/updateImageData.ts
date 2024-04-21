@@ -21,7 +21,7 @@ type UpdateImageDataProps = Partial<
   >
 >
 
-async function updateImageData(id: string, wallId = 'photos', data: UpdateImageDataProps) {
+async function updateImageData(id: string, wallId: string, data: UpdateImageDataProps) {
   const docRef = doc(db, 'walls', wallId, 'photos', id)
   await updateDoc(docRef, { order: Date.now(), ...data })
 }

@@ -1,14 +1,19 @@
 import { create } from 'zustand'
 
-import { ImageData } from 'types/imageData.ts'
+import { ImageData, StickerData, StickerFromGallery } from 'types/imageData.ts'
+
+type StoreImage = ImageData | StickerData
 
 interface State {
-  images: ImageData[]
-  setImages: (images: ImageData[]) => void
-  addImage: (image: ImageData) => void
+  images: StoreImage[]
+  setImages: (images: StoreImage[]) => void
+  addImage: (image: StoreImage) => void
+  updateImage: (id: string, imageData: Omit<Partial<StoreImage>, 'id'>) => void
   deleteImage: (id: string) => void
   movingImageIndex: number | null // index of image when user moves image from uploaded section
   setMovingImageIndex: (index: number | null) => void
+  movingSticker: StickerFromGallery | null // data of sticker when user moves image from uploaded section
+  setMovingSticker: (src: StickerFromGallery | null) => void
   selectedImageIndex: number | null
   setSelectedImageIndex: (index: number | null) => void
   selectedImageDataForEditingSection: Record<string, number> | null
@@ -23,9 +28,17 @@ const useStore = create<State>()((set) => ({
   images: [],
   setImages: (images) => set(() => ({ images: images })),
   addImage: (image) => set((state) => ({ images: [...state.images, image] })),
+  updateImage: (id, imageData) =>
+    set((state) => ({
+      images: state.images.map((img) =>
+        img.id === id ? ({ ...img, ...imageData } as StoreImage) : img,
+      ),
+    })),
   deleteImage: (id) => set((state) => ({ images: state.images.filter((img) => img.id !== id) })),
   movingImageIndex: null,
   setMovingImageIndex: (index) => set(() => ({ movingImageIndex: index })),
+  movingSticker: null,
+  setMovingSticker: (src) => set(() => ({ movingSticker: src })),
   selectedImageIndex: null,
   setSelectedImageIndex: (index) => set(() => ({ selectedImageIndex: index })),
   selectedImageDataForEditingSection: null,
