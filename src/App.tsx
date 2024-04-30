@@ -25,6 +25,7 @@ function App() {
   const setMovingSticker = useStore((state) => state.setMovingSticker)
   const movingImageIndex = useStore((state) => state.movingImageIndex)
   const setMovingImageIndex = useStore((state) => state.setMovingImageIndex)
+  const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
 
   const isViewingMode = useStore((state) => state.isViewingMode)
   const setIsViewingMode = useStore((state) => state.setIsViewingMode)
@@ -50,6 +51,7 @@ function App() {
 
   function handleImagePositionChange(id: string, x: number | null, y: number | null) {
     updateImageData(id, wallId, { x, y })
+    console.log(id, x, y)
     updateImage(id, { x, y, order: Date.now() })
   }
 
@@ -86,7 +88,10 @@ function App() {
   function handleDeleteImage(id: string) {
     deleteImage(id, wallId)
     deleteImageFromStore(id)
+    setSelectedImageIndex(null)
   }
+
+  console.log(images)
 
   return (
     <MainContainer>
@@ -105,6 +110,7 @@ function App() {
           bringToFront={bringToFront}
           onMouseUp={handleMoveImageToWall}
           handleRemoveFromWall={handleRemoveFromWall}
+          handleDelete={handleDeleteImage}
         />
       </WallContainer>
     </MainContainer>

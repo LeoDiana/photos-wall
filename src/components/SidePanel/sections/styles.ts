@@ -17,8 +17,9 @@ export const ColorBackground = styled.div<{
     background-color: ${$color};
   `,
 ])
-
 export const ColorBackgroundsContainer = tw.div`w-full pb-2 flex justify-between`
+
+export const EditingSectionContainer = tw.div`flex flex-col gap-2`
 export const ErrorMessage = tw.div`font-medium text-center mt-2 text-red-400`
 
 export const Frame = styled.div<{

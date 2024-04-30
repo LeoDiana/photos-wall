@@ -3,10 +3,12 @@ import { useParams } from 'react-router-dom'
 import updateImageData from 'api/updateImageData.ts'
 import useStore from 'store/useStore.ts'
 import { Button } from 'styles/buttonStyles.ts'
-import { FrameStyle } from 'types/imageData.ts'
+import { FrameStyle, ImageType } from 'types/imageData.ts'
 import { toDeg } from 'utils/math'
 
-import { Frame, FramesContainer } from './styles.ts'
+import deleteImage from '/api/deleteImage.ts'
+
+import { EditingSectionContainer, Frame, FramesContainer } from './styles.ts'
 
 const frames: {
   variant: FrameStyle
@@ -24,9 +26,12 @@ function Editing() {
   const images = useStore((state) => state.images)
   const setImages = useStore((state) => state.setImages)
   const selectedImageIndex = useStore((state) => state.selectedImageIndex)
+  const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
   const selectedImageDataForEditingSection = useStore(
     (state) => state.selectedImageDataForEditingSection,
   )
+  const updateImage = useStore((state) => state.updateImage)
+  const deleteImageFromStore = useStore((state) => state.deleteImage)
 
   const imgSrc = Number.isInteger(selectedImageIndex) ? images[selectedImageIndex!].src : null
 
@@ -43,13 +48,32 @@ function Editing() {
     }
   }
 
-  return Number.isInteger(selectedImageIndex) ? (
-    <>
-      <div>rotation</div>
-      <div>{toDeg(selectedImageDataForEditingSection?.borderRotation || 0) || ':('}</div>
-      <div>image rotation</div>
-      <div>{toDeg(selectedImageDataForEditingSection?.imageRotation || 0) || ':('}</div>
-      <div>border</div>
+  function handleRemove() {
+    if (selectedImageIndex) {
+      updateImageData(images[selectedImageIndex].id, wallId, { x: null, y: null })
+      updateImage(images[selectedImageIndex].id, { x: null, y: null })
+    }
+  }
+
+  function handleDelete() {
+    if (selectedImageIndex) {
+      deleteImage(images[selectedImageIndex].id, wallId)
+      deleteImageFromStore(images[selectedImageIndex].id)
+      setSelectedImageIndex(null)
+    }
+  }
+
+  if (selectedImageIndex === undefined || selectedImageIndex === null) {
+    return null
+  }
+
+  return images[selectedImageIndex].type === ImageType.image ? (
+    <EditingSectionContainer>
+      <div>
+        <div>Outer Rotation: {toDeg(selectedImageDataForEditingSection?.borderRotation || 0)}°</div>
+        <div>Image rotation: {toDeg(selectedImageDataForEditingSection?.imageRotation || 0)}°</div>
+      </div>
+      <div>Border</div>
       <FramesContainer>
         {frames.map(({ variant, title }) => (
           <div key={variant} onClick={handleChangeBorderStyle(variant)}>
@@ -58,9 +82,16 @@ function Editing() {
           </div>
         ))}
       </FramesContainer>
-      <Button>Remove from wall</Button>
-    </>
-  ) : null
+      <Button onClick={handleRemove}>Remove from wall</Button>
+    </EditingSectionContainer>
+  ) : (
+    <EditingSectionContainer>
+      <div>
+        <div>Rotation: {toDeg(selectedImageDataForEditingSection?.borderRotation || 0)}°</div>
+      </div>
+      <Button onClick={handleDelete}>Delete sticker</Button>
+    </EditingSectionContainer>
+  )
 }
 
 export default Editing

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-import getStickers from '../../../api/getStickers.ts'
-import useStore from '../../../store/useStore.ts'
-import { StickerFromGallery } from '../../../types/imageData.ts'
+import getStickers from 'api/getStickers.ts'
+import useStore from 'store/useStore.ts'
+import { StickerFromGallery } from 'types/imageData.ts'
 
 import { BackgroundSectionContainer, StickerElement } from './styles.ts'
 
@@ -26,6 +26,11 @@ function Stickers() {
           $height={sticker.height * sticker.scale}
           draggable
           onDragEnd={() => setMovingSticker(sticker)}
+          onDragStart={(e) => {
+            const img = new Image()
+            img.src = sticker.src
+            e.dataTransfer.setDragImage(img, 0, 0)
+          }}
         />
       ))}
     </BackgroundSectionContainer>

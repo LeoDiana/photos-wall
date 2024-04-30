@@ -20,6 +20,7 @@ interface WallProps {
   bringToFront: (id: string) => void
   onMouseUp: (e: MouseEvent<HTMLDivElement>) => void
   handleRemoveFromWall: (id: string) => void
+  handleDelete: (id: string) => void
 }
 
 function Wall({
@@ -28,6 +29,7 @@ function Wall({
   bringToFront,
   onMouseUp,
   handleRemoveFromWall,
+  handleDelete,
 }: WallProps) {
   const { wallId } = useParams() as {
     wallId: string
@@ -180,7 +182,12 @@ function Wall({
         }}
         onKeyDown={(event) => {
           if (event.key === 'Backspace' && lastSelectedImageIndex) {
-            handleRemoveFromWall(images[lastSelectedImageIndex].id)
+            if (images[lastSelectedImageIndex].type === ImageType.sticker) {
+              handleDelete(images[lastSelectedImageIndex].id)
+            }
+            if (images[lastSelectedImageIndex].type === ImageType.image) {
+              handleRemoveFromWall(images[lastSelectedImageIndex].id)
+            }
           }
         }}
         tabIndex={0}
