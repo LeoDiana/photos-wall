@@ -130,7 +130,6 @@ function useImage({
   }
 
   function changeImageSize({ width, height }: Dimensions, isFinished = true) {
-    console.log('wi', width)
     imageRef.current!.style.width = `${width}px`
     imageRef.current!.style.height = `${height}px`
     imageInBorderRef.current!.style.width = `${width}px`

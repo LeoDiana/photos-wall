@@ -1,11 +1,17 @@
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 
 import { db } from 'firebaseInstances.ts'
 
 async function getBackground(wallId = 'photos') {
-  const wallSnapshot = await getDoc(doc(db, 'walls', wallId))
+  const wallRef = doc(db, 'walls', wallId)
+  const wallSnapshot = await getDoc(wallRef)
 
-  return (wallSnapshot.data() as { background: string | null }).background || null
+  if (wallSnapshot.data()) {
+    return (wallSnapshot.data() as { background: string | null }).background || null
+  } else {
+    await setDoc(wallRef, { background: '' })
+    return ''
+  }
 }
 
 export default getBackground
