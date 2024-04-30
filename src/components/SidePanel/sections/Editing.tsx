@@ -1,12 +1,11 @@
 import { useParams } from 'react-router-dom'
 
+import deleteImage from 'api/deleteImage.ts'
 import updateImageData from 'api/updateImageData.ts'
 import useStore from 'store/useStore.ts'
 import { Button } from 'styles/buttonStyles.ts'
 import { FrameStyle, ImageType } from 'types/imageData.ts'
 import { toDeg } from 'utils/math'
-
-import deleteImage from '/api/deleteImage.ts'
 
 import { EditingSectionContainer, Frame, FramesContainer } from './styles.ts'
 
