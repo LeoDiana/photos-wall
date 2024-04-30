@@ -333,7 +333,7 @@ function useImage({
 
     const { x: _x, y: _y } = rotateVector(
       { x: newOffsetX, y: newOffsetY },
-      -currentRotation.current,
+      -(currentRotation.current + currentBorderRotation.current),
     )
     let maxOffsetX = imageOffset.current.x + _x
     let maxOffsetY = imageOffset.current.y + _y
