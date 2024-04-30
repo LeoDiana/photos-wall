@@ -9,8 +9,8 @@ async function getBackground(wallId = 'photos') {
   if (wallSnapshot.data()) {
     return (wallSnapshot.data() as { background: string | null }).background || null
   } else {
-    await setDoc(wallRef, { background: '' })
-    return ''
+    await setDoc(wallRef, { background: null })
+    return null
   }
 }
 
