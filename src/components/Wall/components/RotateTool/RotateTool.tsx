@@ -1,11 +1,12 @@
 import { MouseEvent, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import RotateIcon from 'assets/RotateIcon.tsx'
 import { Overlay } from 'styles/overlayStyles.ts'
 import { DefinedPosition } from 'types/imageData.ts'
 import { findRotationAngle } from 'utils/math'
 
-import { RotateIcon } from './styles.ts'
+import { RotateIconWrapper } from './styles.ts'
 
 interface RotateToolProps {
   center: DefinedPosition
@@ -39,7 +40,9 @@ function RotateTool({ center, onRotating, onRotatingFinished }: RotateToolProps)
 
   return (
     <>
-      <RotateIcon onMouseDown={handleMouseDown} />
+      <RotateIconWrapper onMouseDown={handleMouseDown}>
+        <RotateIcon />
+      </RotateIconWrapper>
       {isRotating &&
         createPortal(
           <Overlay onMouseUp={handleMouseUp} onMouseMove={handleMouseMove} />,

@@ -1,10 +1,11 @@
 import { MouseEvent, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import CornerIcon from 'assets/CornerIcon.tsx'
 import { Overlay } from 'styles/overlayStyles.ts'
 import { Side } from 'types/imageData.ts'
 
-import { CornerElement } from './styles.ts'
+import { cornerColorVariants, CornerElement } from './styles.ts'
 
 const corners: [Side, Side][] = [
   [Side.top, Side.right],
@@ -58,9 +59,10 @@ function ResizeHelper({ onScaling, onScalingFinished, variant }: ResizeHelperPro
         <CornerElement
           key={corner.toString()}
           $sides={corner}
-          $variant={variant}
           onMouseDown={handleMouseDownResize(corner)}
-        />
+        >
+          <CornerIcon color={cornerColorVariants[variant]} />
+        </CornerElement>
       ))}
       {isResizing &&
         createPortal(
