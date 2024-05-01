@@ -36,7 +36,7 @@ function Editing() {
 
   function handleChangeBorderStyle(style: FrameStyle) {
     return () => {
-      if (selectedImageIndex) {
+      if (typeof selectedImageIndex === 'number') {
         updateImageData(images[selectedImageIndex].id, wallId, { frameStyle: style })
         setImages(
           images.map((img) =>
@@ -48,14 +48,14 @@ function Editing() {
   }
 
   function handleRemove() {
-    if (selectedImageIndex) {
+    if (typeof selectedImageIndex === 'number') {
       updateImageData(images[selectedImageIndex].id, wallId, { x: null, y: null })
       updateImage(images[selectedImageIndex].id, { x: null, y: null })
     }
   }
 
   function handleDelete() {
-    if (selectedImageIndex) {
+    if (typeof selectedImageIndex === 'number') {
       deleteImage(images[selectedImageIndex].id, wallId)
       deleteImageFromStore(images[selectedImageIndex].id)
       setSelectedImageIndex(null)
