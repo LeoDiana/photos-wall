@@ -22,6 +22,8 @@ interface State {
   setSelectedBackground: (src: string | null) => void
   isViewingMode: boolean
   setIsViewingMode: (isViewingMode: boolean) => void
+  title: string
+  setTitle: (value: string) => void
 }
 
 const useStore = create<State>()((set) => ({
@@ -50,6 +52,8 @@ const useStore = create<State>()((set) => ({
   setSelectedBackground: (src) => set(() => ({ selectedBackground: src })),
   isViewingMode: false,
   setIsViewingMode: (isViewingMode) => set(() => ({ isViewingMode })),
+  title: '',
+  setTitle: (value) => set(() => ({ title: value })),
 }))
 
 export default useStore

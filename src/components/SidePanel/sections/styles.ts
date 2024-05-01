@@ -21,7 +21,6 @@ export const ColorBackgroundsContainer = tw.div`w-full pb-2 flex justify-between
 
 export const EditingSectionContainer = tw.div`flex flex-col gap-2`
 export const ErrorMessage = tw.div`font-medium text-center mt-2 text-red-400`
-
 export const Frame = styled.div<{
   $imgSrc: string | null
   $variant: FrameStyle
@@ -30,8 +29,9 @@ export const Frame = styled.div<{
   frameStyles[$variant],
   withBackground({ imgSrc: $imgSrc }),
 ])
-export const FramesContainer = tw.div`flex gap-2`
 
+export const FramesContainer = tw.div`flex gap-2`
+export const GeneralSectionContainer = tw.div`flex flex-col gap-4`
 export const ImageBackground = styled.div<{
   $imgSrc: string | null
 }>(({ $imgSrc }) => [tw`bg-cover w-80 h-52`, withBackground({ imgSrc: $imgSrc })])
@@ -49,9 +49,13 @@ export const StickerElement = styled.div<{
     height: ${$height}px;
   `,
 ])
+export const TitleContainer = tw.div`flex gap-2 text-lg`
 
 export const UploadedImage = styled.div<{
   $imgSrc: string | null
 }>(({ $imgSrc }) => [tw`h-[100px] w-[100px] bg-cover`, withBackground({ imgSrc: $imgSrc })])
 
 export const UploadedImagesContainer = tw.div`flex gap-2 flex-wrap mt-4`
+
+export const WallInput = tw.input`bg-transparent text-yellow-100`
+export const WallTitle = tw.p`font-medium`

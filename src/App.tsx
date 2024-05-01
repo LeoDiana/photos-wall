@@ -6,6 +6,7 @@ import Wall from 'components/Wall/Wall.tsx'
 import { getImages, updateImageData } from './api'
 import addSticker from './api/addSticker.ts'
 import deleteImage from './api/deleteImage.ts'
+import getTitle from './api/getTitle.ts'
 import SidePanel from './components/SidePanel'
 import useStore from './store/useStore.ts'
 import { MainContainer, ReturnToEditModeButton, Title, WallContainer } from './styles.ts'
@@ -32,6 +33,9 @@ function App() {
 
   const wallContainerRef = useRef<HTMLDivElement>(null)
 
+  const title = useStore((state) => state.title)
+  const setTitle = useStore((state) => state.setTitle)
+
   useEffect(() => {
     if (wallContainerRef.current) {
       const centerWidth =
@@ -45,13 +49,18 @@ function App() {
 
   useEffect(() => {
     ;(async () => {
+      setTitle(await getTitle(wallId))
+    })()
+  }, [wallId])
+
+  useEffect(() => {
+    ;(async () => {
       setImages(await getImages(wallId))
     })()
   }, [setImages, wallId])
 
   function handleImagePositionChange(id: string, x: number | null, y: number | null) {
     updateImageData(id, wallId, { x, y })
-    console.log(id, x, y)
     updateImage(id, { x, y, order: Date.now() })
   }
 
@@ -91,11 +100,9 @@ function App() {
     setSelectedImageIndex(null)
   }
 
-  console.log(images)
-
   return (
     <MainContainer>
-      <Title>My wall</Title>
+      {title && <Title>{title}</Title>}
       {isViewingMode ? (
         <ReturnToEditModeButton onClick={() => setIsViewingMode(false)}>
           &#10132; Edit mode

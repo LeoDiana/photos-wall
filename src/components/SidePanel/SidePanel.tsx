@@ -4,6 +4,7 @@ import { ImageIcon, SettingsIcon, SlidersIcon, StickerIcon, PhotosIcon } from 'a
 import useStore from 'store/useStore.ts'
 
 import { Uploaded, Editing, Backgrounds, Stickers } from './sections'
+import General from './sections/General.tsx'
 import {
   Container,
   ExpandButton,
@@ -54,8 +55,6 @@ function SidePanel() {
   const [selectedSection, setSelectedSection] = useState(Sections.uploaded)
   const selectedImageIndex = useStore((state) => state.selectedImageIndex)
 
-  const setIsViewingMode = useStore((state) => state.setIsViewingMode)
-
   useEffect(() => {
     if (Number.isInteger(selectedImageIndex)) {
       setSelectedSection(Sections.editing)
@@ -68,6 +67,8 @@ function SidePanel() {
 
   function renderSection() {
     switch (selectedSection) {
+      case Sections.general:
+        return <General />
       case Sections.uploaded:
         return <Uploaded />
       case Sections.editing:
@@ -77,11 +78,7 @@ function SidePanel() {
       case Sections.stickers:
         return <Stickers />
       default:
-        return (
-          <>
-            <p onClick={() => setIsViewingMode(true)}>Go to viewing mode</p>
-          </>
-        )
+        return <General />
     }
   }
 
