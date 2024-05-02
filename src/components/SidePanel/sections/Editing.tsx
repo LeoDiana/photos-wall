@@ -22,17 +22,15 @@ function Editing() {
     wallId: string
   }
 
-  const images = useStore((state) => state.images)
-  const setImages = useStore((state) => state.setImages)
-  const selectedImageIndex = useStore((state) => state.selectedImageIndex)
-  const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
-  const selectedImageDataForEditingSection = useStore(
-    (state) => state.selectedImageDataForEditingSection,
-  )
-  const updateImage = useStore((state) => state.updateImage)
-  const deleteImageFromStore = useStore((state) => state.deleteImage)
-
-  const imgSrc = Number.isInteger(selectedImageIndex) ? images[selectedImageIndex!].src : null
+  const {
+    images,
+    setImages,
+    selectedImageIndex,
+    setSelectedImageIndex,
+    selectedImageDataForEditingSection,
+    updateImage,
+    deleteImage: deleteImageFromStore,
+  } = useStore((state) => state)
 
   function handleChangeBorderStyle(style: FrameStyle) {
     return () => {
@@ -76,7 +74,7 @@ function Editing() {
       <FramesContainer>
         {frames.map(({ variant, title }) => (
           <div key={variant} onClick={handleChangeBorderStyle(variant)}>
-            <Frame $variant={variant} $imgSrc={imgSrc} />
+            <Frame $variant={variant} $imgSrc={images[selectedImageIndex].src} />
             {title}
           </div>
         ))}

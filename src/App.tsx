@@ -16,25 +16,24 @@ function App() {
     wallId: string
   }
 
-  const images = useStore((state) => state.images)
-  const setImages = useStore((state) => state.setImages)
-  const updateImage = useStore((state) => state.updateImage)
-  const deleteImageFromStore = useStore((state) => state.deleteImage)
-  const addImageToStore = useStore((state) => state.addImage)
-
-  const movingSticker = useStore((state) => state.movingSticker)
-  const setMovingSticker = useStore((state) => state.setMovingSticker)
-  const movingImageIndex = useStore((state) => state.movingImageIndex)
-  const setMovingImageIndex = useStore((state) => state.setMovingImageIndex)
-  const setSelectedImageIndex = useStore((state) => state.setSelectedImageIndex)
-
-  const isViewingMode = useStore((state) => state.isViewingMode)
-  const setIsViewingMode = useStore((state) => state.setIsViewingMode)
+  const {
+    images,
+    setImages,
+    updateImage,
+    deleteImage: deleteImageFromStore,
+    addImage: addImageToStore,
+    movingSticker,
+    setMovingSticker,
+    movingImageIndex,
+    setMovingImageIndex,
+    setSelectedImageIndex,
+    isViewingMode,
+    setIsViewingMode,
+    title,
+    setTitle,
+  } = useStore((state) => state)
 
   const wallContainerRef = useRef<HTMLDivElement>(null)
-
-  const title = useStore((state) => state.title)
-  const setTitle = useStore((state) => state.setTitle)
 
   useEffect(() => {
     if (wallContainerRef.current) {
