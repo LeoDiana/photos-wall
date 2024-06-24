@@ -16,7 +16,7 @@ export const MAX_BORDER_WIDTH = 1000
 export const MAX_FILES = 10
 
 export const MAX_SCALE = 5
-export const MAX_SIZE = 2 * 1024 ** 2
+export const MAX_SIZE = 5 * 1024 ** 2
 
 export const MAX_ZOOM = 2
 export const MIN_BORDER_HEIGHT = 50
