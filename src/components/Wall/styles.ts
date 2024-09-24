@@ -7,7 +7,7 @@ import { withBackground } from 'styles/utilStyles.ts'
 export const WallElement = styled.div<{
   $bg: string | null
 }>(({ $bg }) => [
-  tw`bg-teal-50 absolute overflow-hidden origin-top-left bg-cover`,
+  tw`bg-white absolute overflow-hidden origin-top-left bg-cover`,
   withBackground({ imgSrc: $bg }),
   $bg?.startsWith('#') &&
     css`

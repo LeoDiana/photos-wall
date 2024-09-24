@@ -20,8 +20,11 @@ import {
   negativeOrZero,
   rotateVector,
 } from 'utils/math'
+import setPosition from 'utils/setPosition.ts'
 
 import { calcRescaledDimensions, getCornersDif, getScalingVector } from './rescaleUtils.ts'
+
+// TODO set transform origin to border (offset + half of dismentions)
 
 interface UseImageProps extends Partial<Omit<ImageData, 'type'>> {
   isSelected: boolean
@@ -121,8 +124,8 @@ function useImage({
   }
 
   function changeImagePosition({ x, y }: DefinedPosition, isFinished = true) {
-    imageRef.current!.style.transform = `translate(${x}px, ${y}px)`
-    imageInBorderRef.current!.style.transform = `translate(${x}px, ${y}px)`
+    setPosition(imageRef.current, x, y)
+    setPosition(imageInBorderRef.current, x, y)
     if (isFinished) {
       imageOffset.current = { x, y }
     }
@@ -142,7 +145,7 @@ function useImage({
   }
 
   function changeBorderPosition({ x, y }: DefinedPosition, isFinished = true) {
-    borderRef.current!.style.transform = `translate(${x}px, ${y}px)`
+    setPosition(borderRef.current, x, y)
     if (isFinished) {
       borderOffset.current = { x, y }
     }

@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useRef, useState } from 'react'
+import { KeyboardEvent, MouseEvent, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { updateImageData } from 'api'
@@ -12,10 +12,13 @@ import { ImageType, Position } from 'types/imageData.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 import clamp from 'utils/math/clamp.ts'
+import setPosition from 'utils/setPosition.ts'
 
 import Image from './components/Image/Image.tsx'
 import Sticker from './components/Image/Sticker.tsx'
 import { WallElement, ZoomBackdrop, ZoomContainer, ZoomIcon } from './styles.ts'
+
+//TODO fix z-indexing
 
 function Wall() {
   const { wallId } = useParams() as {
@@ -57,12 +60,8 @@ function Wall() {
 
   async function handleMoveImageToWall(event: MouseEvent<HTMLDivElement>) {
     const wall = (event.target as HTMLDivElement).getBoundingClientRect()
-    const mouseX = event.clientX - wall.x
-    const mouseY = event.clientY - wall.y
-    const { x, y } = {
-      x: mouseX,
-      y: mouseY,
-    }
+    const x = event.clientX - wall.x
+    const y = event.clientY - wall.y
 
     if (movingImageIndex !== null) {
       handleImagePositionChange(images[movingImageIndex].id, x, y)
@@ -91,21 +90,10 @@ function Wall() {
     positions.current = images.map((image) => ({ x: image.x, y: image.y }))
     imageRefs.current.forEach((imageRef, index) => {
       if (imageRef?.style) {
-        imageRef.style.left = positions.current[index].x + 'px'
-        imageRef.style.top = positions.current[index].y + 'px'
+        setPosition(imageRef, positions.current[index].x, positions.current[index].y)
       }
     })
   }, [images])
-
-  useEffect(() => {
-    positions.current = positions.current.map((pos) => ({ x: pos.x, y: pos.y }))
-    imageRefs.current.forEach((imageRef, index) => {
-      if (imageRef?.style) {
-        imageRef.style.left = positions.current[index].x + 'px'
-        imageRef.style.top = positions.current[index].y + 'px'
-      }
-    })
-  }, [scale])
 
   useEffect(() => {
     setSelectedImageIndex(lastSelectedImageIndex)
@@ -135,18 +123,18 @@ function Wall() {
 
   function handleMouseMove(event: MouseEvent<HTMLDivElement>) {
     if (isDragging.current && selectedImageIndex.current !== null) {
-      imageRefs.current[selectedImageIndex.current].style.left =
-        event.clientX / scale - offset.current.x + 'px'
-      imageRefs.current[selectedImageIndex.current].style.top =
-        event.clientY / scale - offset.current.y + 'px'
+      const newX = event.clientX / scale - offset.current.x
+      const newY = event.clientY / scale - offset.current.y
+
+      setPosition(imageRefs.current[selectedImageIndex.current], newX, newY)
       positions.current[selectedImageIndex.current] = {
-        x: event.clientX / scale - offset.current.x,
-        y: event.clientY / scale - offset.current.y,
+        x: newX,
+        y: newY,
       }
     }
   }
 
-  function handleMouseUp(event: MouseEvent<HTMLDivElement>) {
+  function handleMouseMoveFinished(event: MouseEvent<HTMLDivElement>) {
     if (selectedImageIndex.current !== null) {
       const selectedImageId = images[selectedImageIndex.current].id
       const mouseX = event.clientX / scale - offset.current.x
@@ -159,23 +147,16 @@ function Wall() {
       handleImagePositionChange(selectedImageId, x, y)
     }
     isDragging.current = false
+  }
+
+  function handleMouseUp(event: MouseEvent<HTMLDivElement>) {
+    handleMouseMoveFinished(event)
     setLastSelectedImageIndex(selectedImageIndex.current)
     selectedImageIndex.current = null
   }
 
   function handleMouseLeave(event: MouseEvent<HTMLDivElement>) {
-    if (selectedImageIndex.current !== null) {
-      const selectedImageId = images[selectedImageIndex.current].id
-      const mouseX = event.clientX / scale - offset.current.x
-      const mouseY = event.clientY / scale - offset.current.y
-
-      const { x, y } = positions.current[selectedImageIndex.current] || {
-        x: mouseX,
-        y: mouseY,
-      }
-      handleImagePositionChange(selectedImageId, x, y)
-    }
-    isDragging.current = false
+    handleMouseMoveFinished(event)
     selectedImageIndex.current = null
   }
 
@@ -193,6 +174,17 @@ function Wall() {
 
   function zoomOut() {
     setScale((scale) => clamp(MIN_ZOOM, MAX_ZOOM, scale - ZOOM_FACTOR))
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Backspace' && lastSelectedImageIndex) {
+      if (images[lastSelectedImageIndex].type === ImageType.sticker) {
+        handleDelete(images[lastSelectedImageIndex].id)
+      }
+      if (images[lastSelectedImageIndex].type === ImageType.image) {
+        handleRemoveFromWall(images[lastSelectedImageIndex].id)
+      }
+    }
   }
 
   return (
@@ -221,16 +213,7 @@ function Wall() {
         onDragEnter={(event) => {
           event.preventDefault()
         }}
-        onKeyDown={(event) => {
-          if (event.key === 'Backspace' && lastSelectedImageIndex) {
-            if (images[lastSelectedImageIndex].type === ImageType.sticker) {
-              handleDelete(images[lastSelectedImageIndex].id)
-            }
-            if (images[lastSelectedImageIndex].type === ImageType.image) {
-              handleRemoveFromWall(images[lastSelectedImageIndex].id)
-            }
-          }
-        }}
+        onKeyDown={handleKeyDown}
         tabIndex={0}
       >
         {images.map((img, index) =>
