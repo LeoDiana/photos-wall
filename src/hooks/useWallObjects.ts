@@ -1,8 +1,8 @@
-import { ImageData, StickerData } from '../types/imageData.ts'
+import { ImageData } from '../types/imageData.ts'
 
 interface ImageValueState {
   _val: number
-  images: (ImageData | StickerData)[]
+  images: ImageData[]
 }
 
 interface ImageValueStore {

@@ -46,8 +46,6 @@ function useImage({
   imageRotation = 0,
   borderRotation = 0,
   isSelected = false,
-  borderHeight = 0,
-  borderWidth = 0,
   type,
   containerRef,
 }: UseImageProps) {
@@ -84,9 +82,7 @@ function useImage({
     height: originalHeight * scale,
   })
 
-  const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
-  const hotBorderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
-
+  const hotBorderDimensions = useRef<Dimensions>({ width: 0, height: 0 })
   const hotBorderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
 
   const currentBorderRotation = useRef(borderRotation)
@@ -117,8 +113,8 @@ function useImage({
 
   function updateFullImageData() {
     updateImageData(id, wallId, {
-      borderWidth: borderDimensions.current.width,
-      borderHeight: borderDimensions.current.height,
+      borderWidth: imageWallObject.borderWidth,
+      borderHeight: imageWallObject.borderHeight,
       x: imageWallObject.x,
       y: imageWallObject.y,
       scale: currentScale.current,
@@ -138,7 +134,7 @@ function useImage({
     hotImageOffset.current = { x, y }
   }
 
-  function changeImageSize({ width, height }: Dimensions, isFinished = true) {
+  function changeImageDimensions({ width, height }: Dimensions, isFinished = true) {
     setDimensions(imageRef.current, { width, height })
     setDimensions(imageInBorderRef.current, { width, height })
     if (isFinished) {
@@ -151,7 +147,7 @@ function useImage({
   function changeBorderPosition({ x, y }: DefinedPosition, isFinished = true) {
     setPosition(containerRef, { x, y })
 
-    if (isFinished && imageWallObject) {
+    if (isFinished) {
       imageWallObject.x = x
       imageWallObject.y = y
     }
@@ -159,7 +155,7 @@ function useImage({
     hotBorderOffset.current = { x, y }
   }
 
-  function changeBorderSize({ width, height }: Dimensions, isFinished = true) {
+  function changeBorderDimensions({ width, height }: Dimensions, isFinished = true) {
     setDimensions(borderRef.current, { width, height })
     setDimensions(styledBorderRef.current, { width, height })
 
@@ -167,7 +163,8 @@ function useImage({
     imageInBorderRef.current!.style.transformOrigin = `${width / 2}px ${height / 2}px`
 
     if (isFinished) {
-      borderDimensions.current = { width, height }
+      imageWallObject.borderWidth = width
+      imageWallObject.borderHeight = height
     }
     hotBorderDimensions.current = { width, height }
   }
@@ -197,7 +194,7 @@ function useImage({
 
   useEffect(() => {
     if (imageRef.current && imageInBorderRef.current) {
-      changeImageSize({ width: originalWidth * scale, height: originalHeight * scale })
+      changeImageDimensions({ width: originalWidth * scale, height: originalHeight * scale })
     }
   }, [originalHeight, scale, originalWidth])
 
@@ -214,22 +211,22 @@ function useImage({
   }, [imageRotation])
 
   useEffect(() => {
-    if (borderRef.current) {
+    if (imageWallObject) {
       switch (type) {
         case ImageType.image:
-          changeBorderSize({
-            width: borderWidth,
-            height: borderHeight,
+          changeBorderDimensions({
+            width: imageWallObject.borderWidth,
+            height: imageWallObject.borderHeight,
           })
           break
         case ImageType.sticker:
-          changeBorderSize({
+          changeBorderDimensions({
             width: originalWidth * scale,
             height: originalHeight * scale,
           })
       }
     }
-  }, [borderWidth, borderHeight])
+  }, [imageWallObject])
 
   useEffect(() => {
     if (borderRef.current) {
@@ -291,7 +288,7 @@ function useImage({
       newH = h2
     }
 
-    changeImageSize(
+    changeImageDimensions(
       {
         width: newW,
         height: newH,
@@ -437,10 +434,13 @@ function useImage({
       B: b,
       C: c,
       D: d,
-    } = calcCornersCoords(borderDimensions.current, {
-      x: 0,
-      y: 0,
-    })
+    } = calcCornersCoords(
+      { width: imageWallObject.borderWidth, height: imageWallObject.borderHeight },
+      {
+        x: 0,
+        y: 0,
+      },
+    )
     const corners = [a, b, c, d]
     let canBeRescaled = true
 
@@ -454,8 +454,8 @@ function useImage({
           },
           currentRotation.current,
           {
-            x: borderDimensions.current.width / 2,
-            y: borderDimensions.current.height / 2,
+            x: imageWallObject.borderWidth / 2,
+            y: imageWallObject.borderHeight / 2,
           },
         )
         const distance = negativeOrZero(
@@ -469,7 +469,7 @@ function useImage({
     })
 
     if (canBeRescaled) {
-      changeImageSize(
+      changeImageDimensions(
         {
           width: actualWidth,
           height: actualHeight,
@@ -505,17 +505,17 @@ function useImage({
     const { width: difW, height: difH } = getCornersDif(difX, -difY, movingSides)
 
     const suggestedWidth =
-      borderDimensions.current.width + difW * (movingSides.includes(Side.left) ? -1 : 1)
+      imageWallObject.borderWidth + difW * (movingSides.includes(Side.left) ? -1 : 1)
     const suggestedHeight =
-      borderDimensions.current.height + difH * (movingSides.includes(Side.top) ? -1 : 1)
+      imageWallObject.borderHeight + difH * (movingSides.includes(Side.top) ? -1 : 1)
 
     const newWidth = clamp(MIN_BORDER_WIDTH, MAX_BORDER_WIDTH, suggestedWidth)
     const newHeight = clamp(MIN_BORDER_HEIGHT, MAX_BORDER_HEIGHT, suggestedHeight)
 
-    changeBorderSize({ width: newWidth, height: newHeight }, false)
+    changeBorderDimensions({ width: newWidth, height: newHeight }, false)
 
-    const actualDifX = borderDimensions.current.width - newWidth
-    const actualDifY = borderDimensions.current.height - newHeight
+    const actualDifX = imageWallObject.borderWidth - newWidth
+    const actualDifY = imageWallObject.borderHeight - newHeight
 
     const newOffsetX = imageWallObject.x + actualDifX * (movingSides.includes(Side.left) ? 1 : 0)
     const newOffsetY = imageWallObject.y + actualDifY * (movingSides.includes(Side.top) ? 1 : 0)
@@ -526,7 +526,7 @@ function useImage({
   }
 
   function handleBorderResizeFinished() {
-    borderDimensions.current = hotBorderDimensions.current
+    changeBorderDimensions(hotBorderDimensions.current)
     changeBorderPosition(hotBorderOffset.current)
     updateFullImageData()
   }
@@ -557,12 +557,12 @@ function useImage({
     })
     currentScale.current = scaleFactor
 
-    changeBorderSize({ width: actualWidth, height: actualHeight }, false)
-    changeImageSize({ width: actualWidth, height: actualHeight }, false)
+    changeBorderDimensions({ width: actualWidth, height: actualHeight }, false)
+    changeImageDimensions({ width: actualWidth, height: actualHeight }, false)
   }
 
   function handleStickerResizeFinished() {
-    borderDimensions.current = hotBorderDimensions.current
+    changeBorderDimensions(hotBorderDimensions.current)
     imageDimensions.current = hotImageDimensions.current
     updateFullImageData()
   }
