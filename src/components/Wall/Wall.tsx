@@ -12,7 +12,7 @@ import { ImageType } from 'types/imageData.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 import clamp from 'utils/math/clamp.ts'
-import setPosition from 'utils/setPosition.ts'
+import setPosition from 'utils/styles/setPosition.ts'
 
 import useWallObjects from '../../hooks/useWallObjects.ts'
 
@@ -92,8 +92,8 @@ function Wall() {
   useEffect(() => {
     wallObjects.images = images
     imageRefs.current.forEach((imageRef, index) => {
-      if (imageRef?.style) {
-        setPosition(imageRef, wallObjects.images[index].x, wallObjects.images[index].y)
+      if (wallObjects.images[index].x !== null && wallObjects.images[index].y !== null) {
+        setPosition(imageRef, { x: wallObjects.images[index].x!, y: wallObjects.images[index].y! })
       }
     })
   }, [images])
@@ -129,7 +129,7 @@ function Wall() {
       const newX = event.clientX / scale - offset.current.x
       const newY = event.clientY / scale - offset.current.y
 
-      setPosition(imageRefs.current[selectedImageIndex.current], newX, newY)
+      setPosition(imageRefs.current[selectedImageIndex.current], { x: newX, y: newY })
       wallObjects.images[selectedImageIndex.current].x = newX
       wallObjects.images[selectedImageIndex.current].y = newY
     }

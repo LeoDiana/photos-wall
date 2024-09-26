@@ -20,9 +20,11 @@ import {
   negativeOrZero,
   rotateVector,
 } from 'utils/math'
-import setPosition from 'utils/setPosition.ts'
+import setPosition from 'utils/styles/setPosition.ts'
 
 import useWallObjects from '../../../../hooks/useWallObjects.ts'
+import setDimensions from '../../../../utils/styles/setDimensions.ts'
+import setRotation from '../../../../utils/styles/setRotation.ts'
 
 import { calcRescaledDimensions, getCornersDif, getScalingVector } from './rescaleUtils.ts'
 
@@ -128,8 +130,8 @@ function useImage({
   }
 
   function changeImagePosition({ x, y }: DefinedPosition, isFinished = true) {
-    setPosition(imageRef.current, x, y)
-    setPosition(imageInBorderRef.current, x, y)
+    setPosition(imageRef.current, { x, y })
+    setPosition(imageInBorderRef.current, { x, y })
     if (isFinished) {
       imageOffset.current = { x, y }
     }
@@ -137,10 +139,8 @@ function useImage({
   }
 
   function changeImageSize({ width, height }: Dimensions, isFinished = true) {
-    imageRef.current!.style.width = `${width}px`
-    imageRef.current!.style.height = `${height}px`
-    imageInBorderRef.current!.style.width = `${width}px`
-    imageInBorderRef.current!.style.height = `${height}px`
+    setDimensions(imageRef.current, { width, height })
+    setDimensions(imageInBorderRef.current, { width, height })
     if (isFinished) {
       imageDimensions.current = { width, height }
     }
@@ -149,7 +149,7 @@ function useImage({
   }
 
   function changeBorderPosition({ x, y }: DefinedPosition, isFinished = true) {
-    setPosition(containerRef, x, y)
+    setPosition(containerRef, { x, y })
 
     if (isFinished && imageWallObject) {
       imageWallObject.x = x
@@ -160,12 +160,9 @@ function useImage({
   }
 
   function changeBorderSize({ width, height }: Dimensions, isFinished = true) {
-    borderRef.current!.style.width = `${width}px`
-    borderRef.current!.style.height = `${height}px`
-    if (styledBorderRef.current) {
-      styledBorderRef.current.style.width = `${width}px`
-      styledBorderRef.current.style.height = `${height}px`
-    }
+    setDimensions(borderRef.current, { width, height })
+    setDimensions(styledBorderRef.current, { width, height })
+
     imageRef.current!.style.transformOrigin = `${width / 2}px ${height / 2}px`
     imageInBorderRef.current!.style.transformOrigin = `${width / 2}px ${height / 2}px`
 
@@ -176,8 +173,8 @@ function useImage({
   }
 
   function changeImageRotation(angle: number, isFinished = true) {
-    imageRef.current!.style.rotate = `${angle}rad`
-    imageInBorderRef.current!.style.rotate = `${angle}rad`
+    setRotation(imageRef.current, angle)
+    setRotation(imageInBorderRef.current, angle)
     if (isFinished) {
       currentRotation.current = angle
     }
@@ -186,7 +183,7 @@ function useImage({
   }
 
   function changeBorderRotation(angle: number, isFinished = true) {
-    borderRef.current!.style.rotate = `${angle}rad`
+    setRotation(borderRef.current, angle)
     if (isFinished) {
       currentBorderRotation.current = angle
     }
