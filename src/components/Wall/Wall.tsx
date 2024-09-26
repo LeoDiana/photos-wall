@@ -8,11 +8,13 @@ import getBackground from 'api/getBackground.ts'
 import { ZoomMinusIcon, ZoomPlusIcon } from 'assets'
 import { MAX_ZOOM, MIN_ZOOM, ZOOM_FACTOR } from 'consts'
 import useStore from 'store/useStore.ts'
-import { ImageType, Position } from 'types/imageData.ts'
+import { ImageType } from 'types/imageData.ts'
 import getSimplifiedImageOrders from 'utils/getSimplifiedImageOrders.ts'
 import isImageWithCoords from 'utils/isImageWithCoords.ts'
 import clamp from 'utils/math/clamp.ts'
 import setPosition from 'utils/setPosition.ts'
+
+import useWallObjects from '../../hooks/useWallObjects.ts'
 
 import Image from './components/Image/Image.tsx'
 import Sticker from './components/Image/Sticker.tsx'
@@ -24,6 +26,8 @@ function Wall() {
   const { wallId } = useParams() as {
     wallId: string
   }
+
+  const wallObjects = useWallObjects('123')
 
   const {
     images,
@@ -41,7 +45,6 @@ function Wall() {
   } = useStore((state) => state)
 
   const imageRefs = useRef<HTMLDivElement[]>([])
-  const positions = useRef<Position[]>([])
   const offset = useRef({ x: 0, y: 0 })
   const isDragging = useRef(false)
   const selectedImageIndex = useRef<number | null>(null)
@@ -51,11 +54,11 @@ function Wall() {
 
   function handleImagePositionChange(id: string, x: number | null, y: number | null) {
     updateImageData(id, wallId, { x, y })
-    updateImage(id, { x, y, order: Date.now() })
+    // updateImage(id, { x, y, order: Date.now() })
   }
 
   function bringToFront(id: string) {
-    setImages(images.map((img) => (img.id === id ? { ...img, order: Date.now() } : img)))
+    // setImages(images.map((img) => (img.id === id ? { ...img, order: Date.now() } : img)))
   }
 
   async function handleMoveImageToWall(event: MouseEvent<HTMLDivElement>) {
@@ -87,10 +90,10 @@ function Wall() {
   }
 
   useEffect(() => {
-    positions.current = images.map((image) => ({ x: image.x, y: image.y }))
+    wallObjects.images = images
     imageRefs.current.forEach((imageRef, index) => {
       if (imageRef?.style) {
-        setPosition(imageRef, positions.current[index].x, positions.current[index].y)
+        setPosition(imageRef, wallObjects.images[index].x, wallObjects.images[index].y)
       }
     })
   }, [images])
@@ -115,8 +118,8 @@ function Wall() {
     isDragging.current = true
     if (selectedImageIndex.current !== null) {
       offset.current = {
-        x: event.clientX / scale - (positions.current[selectedImageIndex.current].x || 0),
-        y: event.clientY / scale - (positions.current[selectedImageIndex.current].y || 0),
+        x: event.clientX / scale - (wallObjects.images[selectedImageIndex.current].x || 0),
+        y: event.clientY / scale - (wallObjects.images[selectedImageIndex.current].y || 0),
       }
     }
   }
@@ -127,10 +130,8 @@ function Wall() {
       const newY = event.clientY / scale - offset.current.y
 
       setPosition(imageRefs.current[selectedImageIndex.current], newX, newY)
-      positions.current[selectedImageIndex.current] = {
-        x: newX,
-        y: newY,
-      }
+      wallObjects.images[selectedImageIndex.current].x = newX
+      wallObjects.images[selectedImageIndex.current].y = newY
     }
   }
 
@@ -140,7 +141,7 @@ function Wall() {
       const mouseX = event.clientX / scale - offset.current.x
       const mouseY = event.clientY / scale - offset.current.y
 
-      const { x, y } = positions.current[selectedImageIndex.current] || {
+      const { x, y } = wallObjects.images[selectedImageIndex.current] || {
         x: mouseX,
         y: mouseY,
       }
@@ -225,6 +226,7 @@ function Wall() {
               order={imageOrders[index]}
               onSelect={() => handleSelectImage(index)}
               isSelected={lastSelectedImageIndex === index}
+              containerRef={imageRefs.current[index]}
             />
           ) : img.type === ImageType.sticker ? (
             <Sticker

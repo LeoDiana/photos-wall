@@ -22,6 +22,8 @@ import {
 } from 'utils/math'
 import setPosition from 'utils/setPosition.ts'
 
+import useWallObjects from '../../../../hooks/useWallObjects.ts'
+
 import { calcRescaledDimensions, getCornersDif, getScalingVector } from './rescaleUtils.ts'
 
 // TODO set transform origin to border (offset + half of dismentions)
@@ -29,6 +31,7 @@ import { calcRescaledDimensions, getCornersDif, getScalingVector } from './resca
 interface UseImageProps extends Partial<Omit<ImageData, 'type'>> {
   isSelected: boolean
   type: ImageType
+  containerRef: HTMLDivElement
 }
 
 function useImage({
@@ -43,10 +46,12 @@ function useImage({
   isSelected = false,
   borderHeight = 0,
   borderWidth = 0,
-  borderOffsetX = 0,
-  borderOffsetY = 0,
   type,
+  containerRef,
 }: UseImageProps) {
+  const wallObjects = useWallObjects('123')
+  const imageWallObject = wallObjects.images.find((obj) => obj.id === id)!
+
   const setSelectedImageDataForEditingSection = useStore(
     (state) => state.setSelectedImageDataForEditingSection,
   )
@@ -80,7 +85,6 @@ function useImage({
   const borderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
   const hotBorderDimensions = useRef<Dimensions>({ width: borderWidth, height: borderHeight })
 
-  const borderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
   const hotBorderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
 
   const currentBorderRotation = useRef(borderRotation)
@@ -113,8 +117,8 @@ function useImage({
     updateImageData(id, wallId, {
       borderWidth: borderDimensions.current.width,
       borderHeight: borderDimensions.current.height,
-      borderOffsetX: borderOffset.current.x,
-      borderOffsetY: borderOffset.current.y,
+      x: imageWallObject.x,
+      y: imageWallObject.y,
       scale: currentScale.current,
       xOffset: imageOffset.current.x,
       yOffset: imageOffset.current.y,
@@ -145,10 +149,13 @@ function useImage({
   }
 
   function changeBorderPosition({ x, y }: DefinedPosition, isFinished = true) {
-    setPosition(borderRef.current, x, y)
-    if (isFinished) {
-      borderOffset.current = { x, y }
+    setPosition(containerRef, x, y)
+
+    if (isFinished && imageWallObject) {
+      imageWallObject.x = x
+      imageWallObject.y = y
     }
+
     hotBorderOffset.current = { x, y }
   }
 
@@ -226,12 +233,6 @@ function useImage({
       }
     }
   }, [borderWidth, borderHeight])
-
-  useEffect(() => {
-    if (borderRef.current) {
-      changeBorderPosition({ x: borderOffsetX, y: borderOffsetY })
-    }
-  }, [borderOffsetX, borderOffsetY])
 
   useEffect(() => {
     if (borderRef.current) {
@@ -519,10 +520,8 @@ function useImage({
     const actualDifX = borderDimensions.current.width - newWidth
     const actualDifY = borderDimensions.current.height - newHeight
 
-    const newOffsetX =
-      borderOffset.current.x + actualDifX * (movingSides.includes(Side.left) ? 1 : 0)
-    const newOffsetY =
-      borderOffset.current.y + actualDifY * (movingSides.includes(Side.top) ? 1 : 0)
+    const newOffsetX = imageWallObject.x + actualDifX * (movingSides.includes(Side.left) ? 1 : 0)
+    const newOffsetY = imageWallObject.y + actualDifY * (movingSides.includes(Side.top) ? 1 : 0)
 
     changeBorderPosition({ x: newOffsetX, y: newOffsetY }, false)
 
@@ -531,7 +530,7 @@ function useImage({
 
   function handleBorderResizeFinished() {
     borderDimensions.current = hotBorderDimensions.current
-    borderOffset.current = hotBorderOffset.current
+    changeBorderPosition(hotBorderOffset.current)
     updateFullImageData()
   }
 

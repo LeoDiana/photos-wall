@@ -23,8 +23,6 @@ export interface ImageData {
   borderRotation: number
   borderWidth: number
   borderHeight: number
-  borderOffsetX: number
-  borderOffsetY: number
   frameStyle: FrameStyle
   type: ImageType.image
 }

@@ -19,6 +19,7 @@ import useImage from './useImage.ts'
 interface ImageProps extends ImageData {
   isSelected: boolean
   onSelect: () => void
+  containerRef: HTMLDivElement
 }
 
 function Image(props: ImageProps, ref: ForwardedRef<HTMLDivElement>) {
