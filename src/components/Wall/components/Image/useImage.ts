@@ -66,7 +66,6 @@ function useImage({
   const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from top left corner
   const isDragging = useRef(false)
 
-  const currentRotation = useRef(imageRotation)
   const hotCurrentRotation = useRef(imageRotation)
 
   const imageOffset = useRef<DefinedPosition>({ x: 0, y: 0 }) // saved
@@ -112,14 +111,15 @@ function useImage({
 
   function updateFullImageData() {
     updateImageData(id, wallId, {
-      borderWidth: imageWallObject.borderWidth,
-      borderHeight: imageWallObject.borderHeight,
-      x: imageWallObject.x,
-      y: imageWallObject.y,
-      scale: imageWallObject.scale,
+      ...imageWallObject,
+      // borderWidth: imageWallObject.borderWidth,
+      // borderHeight: imageWallObject.borderHeight,
+      // x: imageWallObject.x,
+      // y: imageWallObject.y,
+      // scale: imageWallObject.scale,
+      // imageRotation: imageWallObject.imageRotation,
       xOffset: imageOffset.current.x,
       yOffset: imageOffset.current.y,
-      imageRotation: currentRotation.current,
       borderRotation: currentBorderRotation.current,
     })
   }
@@ -172,7 +172,7 @@ function useImage({
     setRotation(imageRef.current, angle)
     setRotation(imageInBorderRef.current, angle)
     if (isFinished) {
-      currentRotation.current = angle
+      imageWallObject.imageRotation = angle
     }
     hotCurrentRotation.current = angle
     setSelectedImageDataForEditingSection({ imageRotation: angle })
@@ -204,10 +204,10 @@ function useImage({
   }, [xOffset, yOffset])
 
   useEffect(() => {
-    if (imageRef.current && imageInBorderRef.current) {
+    if (imageRef.current && imageInBorderRef.current && imageWallObject) {
       changeImageRotation(imageRotation)
     }
-  }, [imageRotation])
+  }, [imageRotation, imageWallObject])
 
   useEffect(() => {
     if (imageWallObject) {
@@ -330,7 +330,7 @@ function useImage({
 
     const { x: _x, y: _y } = rotateVector(
       { x: newOffsetX, y: newOffsetY },
-      -(currentRotation.current + currentBorderRotation.current),
+      -(imageWallObject.imageRotation + currentBorderRotation.current),
     )
     let maxOffsetX = imageOffset.current.x + _x
     let maxOffsetY = imageOffset.current.y + _y
@@ -343,7 +343,7 @@ function useImage({
             x: maxOffsetX,
             y: maxOffsetY,
           },
-          currentRotation.current,
+          imageWallObject.imageRotation,
           {
             x: hotBorderDimensions.current.width / 2,
             y: hotBorderDimensions.current.height / 2,
@@ -408,7 +408,7 @@ function useImage({
       difX,
       difY,
       movingSides,
-      getScalingVector(movingSides, -currentRotation.current),
+      getScalingVector(movingSides, -imageWallObject.imageRotation),
     )
 
     const {
@@ -451,7 +451,7 @@ function useImage({
             x: newXoffset,
             y: newYoffset,
           },
-          currentRotation.current,
+          imageWallObject.imageRotation,
           {
             x: imageWallObject.borderWidth / 2,
             y: imageWallObject.borderHeight / 2,
@@ -543,7 +543,7 @@ function useImage({
       difX,
       difY,
       movingSides,
-      getScalingVector(movingSides, -currentRotation.current),
+      getScalingVector(movingSides, -imageWallObject.imageRotation),
     )
 
     const {
@@ -567,7 +567,7 @@ function useImage({
   }
 
   function handleRotating(diffAngle: number) {
-    const angle = currentRotation.current + diffAngle
+    const angle = imageWallObject.imageRotation + diffAngle
     changeImageRotation(angle, false)
 
     adjust()
@@ -576,7 +576,7 @@ function useImage({
   function handleRotatingFinished() {
     imageDimensions.current = hotImageDimensions.current
     imageOffset.current = hotImageOffset.current
-    currentRotation.current = hotCurrentRotation.current
+    imageWallObject.imageRotation = hotCurrentRotation.current
     updateFullImageData()
   }
 
