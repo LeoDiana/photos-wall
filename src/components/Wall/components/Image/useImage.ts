@@ -66,7 +66,6 @@ function useImage({
   const mouseOffset = useRef({ x: 0, y: 0 }) // mouse offset from top left corner
   const isDragging = useRef(false)
 
-  const currentScale = useRef(scale)
   const currentRotation = useRef(imageRotation)
   const hotCurrentRotation = useRef(imageRotation)
 
@@ -117,7 +116,7 @@ function useImage({
       borderHeight: imageWallObject.borderHeight,
       x: imageWallObject.x,
       y: imageWallObject.y,
-      scale: currentScale.current,
+      scale: imageWallObject.scale,
       xOffset: imageOffset.current.x,
       yOffset: imageOffset.current.y,
       imageRotation: currentRotation.current,
@@ -141,7 +140,7 @@ function useImage({
       imageDimensions.current = { width, height }
     }
     hotImageDimensions.current = { width, height }
-    currentScale.current = width / originalWidth
+    imageWallObject.scale = width / originalWidth
   }
 
   function changeBorderPosition({ x, y }: DefinedPosition, isFinished = true) {
@@ -193,10 +192,10 @@ function useImage({
   }, [isSelected])
 
   useEffect(() => {
-    if (imageRef.current && imageInBorderRef.current) {
+    if (imageRef.current && imageInBorderRef.current && imageWallObject) {
       changeImageDimensions({ width: originalWidth * scale, height: originalHeight * scale })
     }
-  }, [originalHeight, scale, originalWidth])
+  }, [originalHeight, scale, originalWidth, imageWallObject])
 
   useEffect(() => {
     if (imageRef.current && imageInBorderRef.current) {
@@ -420,7 +419,7 @@ function useImage({
       width: originalWidth,
       height: originalHeight,
     })
-    currentScale.current = scaleFactor
+    imageWallObject.scale = scaleFactor
 
     const signX = movingSides.includes(Side.left) ? 1 : 0
     const signY = movingSides.includes(Side.top) ? 1 : 0
@@ -555,7 +554,7 @@ function useImage({
       width: originalWidth,
       height: originalHeight,
     })
-    currentScale.current = scaleFactor
+    imageWallObject.scale = scaleFactor
 
     changeBorderDimensions({ width: actualWidth, height: actualHeight }, false)
     changeImageDimensions({ width: actualWidth, height: actualHeight }, false)
