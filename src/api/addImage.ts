@@ -1,9 +1,7 @@
-import { addDoc, collection, getDoc } from 'firebase/firestore'
-
 import { DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH } from 'consts'
-import { db } from 'firebaseInstances.ts'
 import { FrameStyle, ImageData, ImageType } from 'types/imageData.ts'
 import calculateScaleFactor from 'utils/math/calculateScaleFactor.ts'
+import { generateId, getFromStorage, setToStorage, STORAGE_KEYS } from 'utils/storage.ts'
 
 async function getImageDimensions(src: string): Promise<{ width: number; height: number }> {
   return new Promise(function (resolve, reject) {
@@ -25,9 +23,9 @@ async function getImageDimensions(src: string): Promise<{ width: number; height:
 }
 
 async function addImage(src: string, wallId: string) {
-  const docRef = collection(db, 'walls', wallId, 'photos')
   const dimensions = await getImageDimensions(src)
-  const newImageRef = await addDoc(docRef, {
+  const newImage: ImageData = {
+    id: generateId(),
     src,
     order: Date.now(),
     x: null,
@@ -45,9 +43,14 @@ async function addImage(src: string, wallId: string) {
     frameStyle: FrameStyle.none,
     scale: calculateScaleFactor(dimensions.width, dimensions.height, 250, 250),
     type: ImageType.image,
-  } satisfies Omit<ImageData, 'id'>)
-  const newImageSnapshot = await getDoc(newImageRef)
-  return { ...newImageSnapshot.data(), id: newImageSnapshot.id } as ImageData
+  }
+
+  // Save to sessionStorage
+  const storageKey = STORAGE_KEYS.images(wallId)
+  const existingImages = getFromStorage<ImageData[]>(storageKey, [])
+  setToStorage(storageKey, [...existingImages, newImage])
+
+  return newImage
 }
 
 export default addImage

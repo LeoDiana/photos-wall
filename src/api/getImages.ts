@@ -1,17 +1,9 @@
-import { collection, getDocs, query } from 'firebase/firestore'
-
-import { db } from 'firebaseInstances.ts'
 import { ImageData } from 'types/imageData.ts'
+import { getFromStorage, STORAGE_KEYS } from 'utils/storage.ts'
 
 async function getImages(wallId = 'photos') {
-  const photosQuery = query(collection(db, 'walls', wallId, 'photos'))
-  const photosSnapshot = await getDocs(photosQuery)
-  const photos = photosSnapshot.docs.map((d) => ({
-    ...d.data(),
-    id: d.id,
-  }))
-
-  return (await Promise.all(photos)) as unknown as ImageData[]
+  const storageKey = STORAGE_KEYS.images(wallId)
+  return getFromStorage<ImageData[]>(storageKey, [])
 }
 
 export default getImages

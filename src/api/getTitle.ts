@@ -1,17 +1,14 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-
-import { db } from 'firebaseInstances.ts'
+import { getFromStorage, setToStorage, STORAGE_KEYS } from 'utils/storage.ts'
 
 async function getTitle(wallId = 'photos') {
-  const wallRef = doc(db, 'walls', wallId)
-  const wallSnapshot = await getDoc(wallRef)
-
-  if (wallSnapshot.data()) {
-    return (wallSnapshot.data() as { title: string | null }).title || ''
-  } else {
-    await setDoc(wallRef, { title: 'My wall' })
-    return 'My wall'
+  const storageKey = STORAGE_KEYS.title(wallId)
+  const title = getFromStorage<string | null>(storageKey, null)
+  if (title === null) {
+    const defaultTitle = 'My wall'
+    setToStorage(storageKey, defaultTitle)
+    return defaultTitle
   }
+  return title || ''
 }
 
 export default getTitle

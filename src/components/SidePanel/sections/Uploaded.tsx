@@ -10,7 +10,7 @@ import { ImageData, ImageType } from 'types/imageData.ts'
 
 import { ErrorMessage, Loader, UploadedImage, UploadedImagesContainer } from './styles.ts'
 
-function isImageWithoutCoords(imageData: ImageData) {
+function isImageWithoutCoords(imageData: ImageData | import('types/imageData.ts').StickerData) {
   return imageData.x === null && imageData.y === null
 }
 

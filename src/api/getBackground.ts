@@ -1,17 +1,13 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-
-import { db } from 'firebaseInstances.ts'
+import { getFromStorage, setToStorage, STORAGE_KEYS } from 'utils/storage.ts'
 
 async function getBackground(wallId = 'photos') {
-  const wallRef = doc(db, 'walls', wallId)
-  const wallSnapshot = await getDoc(wallRef)
-
-  if (wallSnapshot.data()) {
-    return (wallSnapshot.data() as { background: string | null }).background || null
-  } else {
-    await setDoc(wallRef, { background: null })
+  const storageKey = STORAGE_KEYS.background(wallId)
+  const background = getFromStorage<string | null>(storageKey, null)
+  if (background === null) {
+    setToStorage(storageKey, null)
     return null
   }
+  return background
 }
 
 export default getBackground

@@ -1,7 +1,5 @@
-import { doc, updateDoc } from 'firebase/firestore'
-
-import { db } from 'firebaseInstances.ts'
 import { ImageData } from 'types/imageData.ts'
+import { getFromStorage, setToStorage, STORAGE_KEYS } from 'utils/storage.ts'
 
 type UpdateImageDataProps = Partial<
   Pick<
@@ -22,8 +20,12 @@ type UpdateImageDataProps = Partial<
 >
 
 async function updateImageData(id: string, wallId: string, data: UpdateImageDataProps) {
-  const docRef = doc(db, 'walls', wallId, 'photos', id)
-  await updateDoc(docRef, { order: Date.now(), ...data })
+  const storageKey = STORAGE_KEYS.images(wallId)
+  const images = getFromStorage<ImageData[]>(storageKey, [])
+  const updatedImages = images.map((img) =>
+    img.id === id ? { ...img, ...data, order: Date.now() } : img,
+  )
+  setToStorage(storageKey, updatedImages)
 }
 
 export default updateImageData

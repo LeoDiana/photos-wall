@@ -1,10 +1,8 @@
-import { doc, updateDoc } from 'firebase/firestore'
-
-import { db } from 'firebaseInstances.ts'
+import { setToStorage, STORAGE_KEYS } from 'utils/storage.ts'
 
 async function updateBackground(wallId = 'photos', value: string) {
-  const docRef = doc(db, 'walls', wallId)
-  await updateDoc(docRef, { background: value })
+  const storageKey = STORAGE_KEYS.background(wallId)
+  setToStorage(storageKey, value)
 }
 
 export default updateBackground

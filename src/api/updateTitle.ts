@@ -1,10 +1,8 @@
-import { doc, updateDoc } from 'firebase/firestore'
-
-import { db } from 'firebaseInstances.ts'
+import { setToStorage, STORAGE_KEYS } from 'utils/storage.ts'
 
 async function updateTitle(wallId = 'photos', value: string) {
-  const docRef = doc(db, 'walls', wallId)
-  await updateDoc(docRef, { title: value })
+  const storageKey = STORAGE_KEYS.title(wallId)
+  setToStorage(storageKey, value)
 }
 
 export default updateTitle

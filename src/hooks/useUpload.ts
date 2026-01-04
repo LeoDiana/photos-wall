@@ -1,8 +1,4 @@
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { ChangeEvent, useState } from 'react'
-import { v4 as uuid } from 'uuid'
-
-import { storage } from 'firebaseInstances'
 
 import { MAX_FILES, MAX_SIZE } from '../consts'
 
@@ -30,10 +26,8 @@ function useUpload() {
         continue
       }
 
-      const storageRef = ref(storage, `user-photos/${uuid()}`)
-
-      const snapshot = await uploadBytes(storageRef, file)
-      const newUrl = await getDownloadURL(snapshot.ref)
+      // Create local object URL instead of uploading to Firebase
+      const newUrl = URL.createObjectURL(file)
       setFilesUrls((urls) => urls.map((url, i) => (i === index ? newUrl : url)))
     }
   }

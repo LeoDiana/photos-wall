@@ -1,17 +1,8 @@
-import { collection, getDocs, query } from 'firebase/firestore'
-
-import { db } from 'firebaseInstances.ts'
-
 import { StickerFromGallery } from '../types/imageData.ts'
 
-async function getStickers() {
-  const stickersSnapshot = await getDocs(query(collection(db, 'stickers')))
-  const stickers = stickersSnapshot.docs.map((d) => ({
-    ...d.data(),
-    id: d.id,
-  }))
-
-  return (await Promise.all(stickers)) as unknown as StickerFromGallery[]
+// Stickers are no longer stored in Firebase, return empty array
+async function getStickers(): Promise<StickerFromGallery[]> {
+  return []
 }
 
 export default getStickers

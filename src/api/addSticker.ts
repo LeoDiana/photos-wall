@@ -1,11 +1,9 @@
-import { addDoc, collection, getDoc } from 'firebase/firestore'
-
-import { db } from 'firebaseInstances.ts'
 import { ImageType, StickerData, StickerFromGallery } from 'types/imageData.ts'
+import { generateId, getFromStorage, setToStorage, STORAGE_KEYS } from 'utils/storage.ts'
 
 async function addSticker(wallId: string, stickerData: StickerFromGallery) {
-  const docRef = collection(db, 'walls', wallId, 'photos')
-  const newImageRef = await addDoc(docRef, {
+  const newSticker: StickerData = {
+    id: generateId(),
     src: stickerData.src,
     order: Date.now(),
     x: null,
@@ -15,9 +13,17 @@ async function addSticker(wallId: string, stickerData: StickerFromGallery) {
     imageRotation: 0,
     scale: stickerData.scale,
     type: ImageType.sticker,
-  } satisfies Omit<StickerData, 'id'>)
-  const newStickerSnapshot = await getDoc(newImageRef)
-  return { ...newStickerSnapshot.data(), id: newStickerSnapshot.id } as StickerData
+  }
+
+  // Save to sessionStorage
+  const storageKey = STORAGE_KEYS.images(wallId)
+  const existingImages = getFromStorage<(StickerData | import('types/imageData.ts').ImageData)[]>(
+    storageKey,
+    [],
+  )
+  setToStorage(storageKey, [...existingImages, newSticker])
+
+  return newSticker
 }
 
 export default addSticker
