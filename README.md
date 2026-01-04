@@ -1,30 +1,73 @@
-# React + TypeScript + Vite
+# Photos Wall (Nostalgi) 🖼️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interactive photo collage application where you can create beautiful photo walls! Upload your photos, arrange
+them however you like, and customize everything to your heart's content.
 
-Currently, two official plugins are available:
+👀 Check out the app here:
+https://leodiana.github.io/photos-wall/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Alt text](./public/demo.gif)
 
-## Expanding the ESLint configuration
+## ✨ Main Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Photo Upload & Management** - Upload multiple photos and organize them on your wall
+- **Drag & Drop** - Simply drag photos from the side panel onto your wall and position them anywhere you want
+- **Image Editing** - Rotate, resize, and adjust your photos with intuitive controls
+- **Customizable Frames** - Add borders or frames to make your photos stand out
+- **Stickers** - Add fun stickers to decorate your photo wall
+- **Background Options** - Choose from various background colors and images
+- **Zoom Controls** - Zoom in and out to see the big picture or focus on details
+- **Viewing Mode** - Toggle between edit mode and viewing mode for a clean, distraction-free experience
 
-- Configure the top-level `parserOptions` property like this:
+## 📝 Note About Firebase
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+For the deployed version, Firebase has been removed and replaced with local storage (sessionStorage). This means:
+
+- All your photos and settings are stored locally in your browser
+- When you reload the page, your work will be cleared (this is by design for privacy)
+
+This makes the app super lightweight and perfect for quick photo wall creation without any setup or authentication
+needed.
+
+## 🛠️ Tech Stack
+
+- **Vite, React, TypeScript, Styled Components, Tailwind, Zustand**
+
+---
+
+Enjoy creating your photo walls! 🎨
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher recommended)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone <your-repo-url>
+cd photos-wall
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Start the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+4. Open your browser and navigate to the URL shown in the terminal (usually `http://localhost:5173`)
+
