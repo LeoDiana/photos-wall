@@ -83,7 +83,6 @@ function useImage({
   const hotBorderDimensions = useRef<Dimensions>({ width: 0, height: 0 })
   const hotBorderOffset = useRef<DefinedPosition>({ x: 0, y: 0 })
 
-  const currentBorderRotation = useRef(borderRotation)
   const hotBorderRotation = useRef(borderRotation)
 
   const rect = imageRef.current?.getBoundingClientRect() || { x: 0, y: 0, width: 0, height: 0 }
@@ -118,9 +117,9 @@ function useImage({
       // y: imageWallObject.y,
       // scale: imageWallObject.scale,
       // imageRotation: imageWallObject.imageRotation,
+      // borderRotation: imageWallObject.borderRotation,
       xOffset: imageOffset.current.x,
       yOffset: imageOffset.current.y,
-      borderRotation: currentBorderRotation.current,
     })
   }
 
@@ -181,7 +180,7 @@ function useImage({
   function changeBorderRotation(angle: number, isFinished = true) {
     setRotation(borderRef.current, angle)
     if (isFinished) {
-      currentBorderRotation.current = angle
+      imageWallObject.borderRotation = angle
     }
     hotBorderRotation.current = angle
     setSelectedImageDataForEditingSection({ borderRotation: angle })
@@ -330,7 +329,7 @@ function useImage({
 
     const { x: _x, y: _y } = rotateVector(
       { x: newOffsetX, y: newOffsetY },
-      -(imageWallObject.imageRotation + currentBorderRotation.current),
+      -(imageWallObject.imageRotation + imageWallObject.borderRotation),
     )
     let maxOffsetX = imageOffset.current.x + _x
     let maxOffsetY = imageOffset.current.y + _y
@@ -581,12 +580,12 @@ function useImage({
   }
 
   function handleBorderRotating(diffAngle: number) {
-    const angle = currentBorderRotation.current + diffAngle
+    const angle = imageWallObject.borderRotation + diffAngle
     changeBorderRotation(angle, false)
   }
 
   function handleBorderRotatingFinished() {
-    currentBorderRotation.current = hotBorderRotation.current
+    imageWallObject.borderRotation = hotBorderRotation.current
     updateFullImageData()
   }
 
