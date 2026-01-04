@@ -1,73 +1,33 @@
-# Photos Wall (Nostalgi) 🖼️
+# 🖼️ Photos Wall (Nostalgi)
 
-Interactive photo collage application where you can create beautiful photo walls! Upload your photos, arrange
-them however you like, and customize everything to your heart's content.
+> **Create beautiful, interactive photo collages and digital memory walls with ease.**
 
-👀 Check out the app here:
-https://leodiana.github.io/photos-wall/
-
-![Alt text](./public/demo.gif)
-
-## ✨ Main Features
-
-- **Photo Upload & Management** - Upload multiple photos and organize them on your wall
-- **Drag & Drop** - Simply drag photos from the side panel onto your wall and position them anywhere you want
-- **Image Editing** - Rotate, resize, and adjust your photos with intuitive controls
-- **Customizable Frames** - Add borders or frames to make your photos stand out
-- **Stickers** - Add fun stickers to decorate your photo wall
-- **Background Options** - Choose from various background colors and images
-- **Zoom Controls** - Zoom in and out to see the big picture or focus on details
-- **Viewing Mode** - Toggle between edit mode and viewing mode for a clean, distraction-free experience
-
-## 📝 Note About Firebase
-
-For the deployed version, Firebase has been removed and replaced with local storage (sessionStorage). This means:
-
-- All your photos and settings are stored locally in your browser
-- When you reload the page, your work will be cleared (this is by design for privacy)
-
-This makes the app super lightweight and perfect for quick photo wall creation without any setup or authentication
-needed.
-
-## 🛠️ Tech Stack
-
-- **Vite, React, TypeScript, Styled Components, Tailwind, Zustand**
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://leodiana.github.io/photos-wall/) ![React](https://img.shields.io/badge/React-18-61DAFB.svg) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg) ![Vite](https://img.shields.io/badge/Vite-646CFF.svg) ![Tailwind](https://img.shields.io/badge/Tailwind-38B2AC.svg)
 
 ---
 
-Enjoy creating your photo walls! 🎨
+## 👋 Welcome!
 
-## 🚀 Getting Started
+Hi there! Welcome to **Photos Wall (Nostalgi)**. This is a creative space where you can upload, arrange, and decorate
+your favorite photos into a personalized digital wall.
 
-### Prerequisites
+**✨ [Try the Live Demo here!](https://leodiana.github.io/photos-wall/)**
 
-- Node.js (v18 or higher recommended)
-- npm or yarn
+![Demo GIF](./public/demo.gif)
 
-### Installation
+## ✨ Main Features
 
-1. Clone the repository:
+* **📸 Easy Upload & Management:** Upload multiple photos and organize them on your wall instantly.
+* **🖱️ Drag & Drop:** Move photos from the side panel and position them anywhere on your canvas.
+* **📐 Creative Editing:** Rotate, resize, and adjust your photos with intuitive, fluid controls.
+* **🖼️ Customizable Frames:** Add borders and frames to make your shots pop.
+* **🎈 Fun Stickers:** Decorate your masterpiece with built-in stickers.
+* **🎨 Backdrop Styles:** Choose from various background colors and images to set the mood.
+* **🔍 Zoom & View:** Zoom out for the big picture or toggle **Viewing Mode** for a distraction-free look at your
+  creation.
 
-```bash
-git clone <your-repo-url>
-cd photos-wall
-```
+## 📝 A Note on Privacy
 
-2. Install dependencies:
-
-```bash
-npm install
-# or
-yarn install
-```
-
-3. Start the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-4. Open your browser and navigate to the URL shown in the terminal (usually `http://localhost:5173`)
-
+While it originally used Firebase, the current version (demo) uses Session Storage. This means all your photos and
+settings stay in your browser. When you close the tab, your work is cleared—perfect for quick, private creations without
+needing an account or any setup!
